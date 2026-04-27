@@ -12,7 +12,7 @@ Three skills that save time on the three most repeated setup and framing tasks i
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] **Plugin scaffolding** — Plugin manifest, README, permissions template, skill stubs, and docs index all in place. Validated in Phase 1 (2026-04-27)
 
 ### Active
 
@@ -66,4 +66,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-26 after initialization*
+*Last updated: 2026-04-27 — Phase 1 complete*
