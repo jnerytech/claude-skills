@@ -65,5 +65,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-27
-Stopped at: Phase 1 complete — run `/gsd-discuss-phase 2` or `/gsd-plan-phase 2` to continue
-Resume file: .planning/phases/ (Phase 2 not yet planned)
+Stopped at: Phase 2 context gathered — run `/gsd-plan-phase 2` to plan
+Resume file: .planning/phases/02-prompt-improvement-skill/02-CONTEXT.md
