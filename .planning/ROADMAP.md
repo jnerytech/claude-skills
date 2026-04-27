@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. `settings.local.json` template exists with `Write(.claude/**)` and `Write(~/.claude/**)` allow rules so the permission regression in v2.1.79+ does not block skill writes
 **Plans**: 3 plans
 
-Plans:
+**Wave 1** *(all plans independent — execute in parallel)*
 - [ ] 01-01-PLAN.md — Plugin manifest, install docs, permissions template (.claude-plugin/plugin.json, README.md, settings.local.json.example, .gitignore)
 - [ ] 01-02-PLAN.md — Skill stub directories with valid SKILL.md placeholders and supporting directories (skills/*/SKILL.md, references/.gitkeep, templates/.gitkeep)
 - [ ] 01-03-PLAN.md — Documentation index for skill-create's on-demand doc loading (docs/index.md)
@@ -79,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Plugin Scaffolding | 0/3 | Not started | - |
+| 1. Plugin Scaffolding | 0/3 | Ready to execute | - |
 | 2. Prompt Improvement Skill | 0/? | Not started | - |
 | 3. Skill Creator Skill | 0/? | Not started | - |
 | 4. Workspace Creator Skill | 0/? | Not started | - |
