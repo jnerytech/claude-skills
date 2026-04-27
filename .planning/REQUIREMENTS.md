@@ -66,11 +66,26 @@
 
 ## Traceability
 
-*(Filled by roadmap agent)*
-
-| REQ-ID | Phase |
-|--------|-------|
-| SETUP-01 — SETUP-05 | — |
-| PROMPT-01 — PROMPT-05 | — |
-| SKILL-01 — SKILL-05 | — |
-| WORK-01 — WORK-06 | — |
+| REQ-ID | Phase | Status |
+|--------|-------|--------|
+| SETUP-01 | Phase 1 | Pending |
+| SETUP-02 | Phase 1 | Pending |
+| SETUP-03 | Phase 1 | Pending |
+| SETUP-04 | Phase 1 | Pending |
+| SETUP-05 | Phase 1 | Pending |
+| PROMPT-01 | Phase 2 | Pending |
+| PROMPT-02 | Phase 2 | Pending |
+| PROMPT-03 | Phase 2 | Pending |
+| PROMPT-04 | Phase 2 | Pending |
+| PROMPT-05 | Phase 2 | Pending |
+| SKILL-01 | Phase 3 | Pending |
+| SKILL-02 | Phase 3 | Pending |
+| SKILL-03 | Phase 3 | Pending |
+| SKILL-04 | Phase 3 | Pending |
+| SKILL-05 | Phase 3 | Pending |
+| WORK-01 | Phase 4 | Pending |
+| WORK-02 | Phase 4 | Pending |
+| WORK-03 | Phase 4 | Pending |
+| WORK-04 | Phase 4 | Pending |
+| WORK-05 | Phase 4 | Pending |
+| WORK-06 | Phase 4 | Pending |
