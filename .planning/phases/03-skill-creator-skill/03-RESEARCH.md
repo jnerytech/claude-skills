@@ -445,12 +445,13 @@ of frontmatter fields, invocation control, and AskUserQuestion constraints befor
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Conditional reference reads: how does Claude decide which to load?**
-   - What we know: D-05 says read hooks/subagents/programmatic only when interview reveals need.
-   - What's unclear: The interview (Stage 4) happens before conditional reads (Stage 5). What interview answer specifically triggers each conditional read?
-   - Recommendation: Planner should specify decision rules: hooks ref when interview answer selects hook-based trigger or Bash(hook) tools; subagents ref when output destination answer selects subagent/fork; programmatic ref when invocation context answer mentions CI/script use.
+   RESOLVED: Planner specified decision rules in Stage 5 of 03-01-PLAN.md:
+   - hooks ref: Topic 1 selects hook-based trigger OR Topic 2 includes Bash hook operations
+   - subagents ref: Topic 3 selects subagent/fork output destination
+   - programmatic ref: description or interview answers mention CI, scripts, or programmatic invocation
 
 ---
 
