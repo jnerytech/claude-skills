@@ -26,11 +26,11 @@
 
 ### Skill Creator
 
-- [ ] **SKILL-01**: User can invoke `/skill-create` and describe the skill they want to build (freeform or via argument)
-- [ ] **SKILL-02**: Skill reads `${CLAUDE_SKILL_DIR}/docs/` before generating to ground output in locally available Claude Code documentation
-- [ ] **SKILL-03**: Skill interviews user with 5-6 targeted questions, each offering proposed answers for the user to react to (not blank questions)
-- [ ] **SKILL-04**: Generated SKILL.md is shown to user for review and confirmation before any file is written
-- [ ] **SKILL-05**: Confirmed skill is written to exactly `~/.claude/skills/<name>/SKILL.md` (global scope, available in all sessions)
+- [x] **SKILL-01**: User can invoke `/skill-create` and describe the skill they want to build (freeform or via argument) *(Phase 3)*
+- [x] **SKILL-02**: Skill reads `${CLAUDE_SKILL_DIR}/docs/` before generating to ground output in locally available Claude Code documentation *(Phase 3 — reads references/ per D-04; intent satisfied)*
+- [x] **SKILL-03**: Skill interviews user with 5-6 targeted questions, each offering proposed answers for the user to react to (not blank questions) *(Phase 3)*
+- [x] **SKILL-04**: Generated SKILL.md is shown to user for review and confirmation before any file is written *(Phase 3)*
+- [x] **SKILL-05**: Confirmed skill is written to exactly `~/.claude/skills/<name>/SKILL.md` (global scope, available in all sessions) *(Phase 3 — uses $USERPROFILE per D-09; functionally equivalent)*
 
 ### Workspace Creator
 
@@ -78,11 +78,11 @@
 | PROMPT-03 | Phase 2 | Structural: Complete; Manual UAT: Pending |
 | PROMPT-04 | Phase 2 | Structural: Complete; Manual UAT: Pending |
 | PROMPT-05 | Phase 2 | Structural: Complete; Manual UAT: Pending |
-| SKILL-01 | Phase 3 | Pending |
-| SKILL-02 | Phase 3 | Pending |
-| SKILL-03 | Phase 3 | Pending |
-| SKILL-04 | Phase 3 | Pending |
-| SKILL-05 | Phase 3 | Pending |
+| SKILL-01 | Phase 3 | Complete |
+| SKILL-02 | Phase 3 | Complete (deviation D-04: references/ not docs/) |
+| SKILL-03 | Phase 3 | Complete |
+| SKILL-04 | Phase 3 | Complete |
+| SKILL-05 | Phase 3 | Complete (deviation D-09: $USERPROFILE not ~) |
 | WORK-01 | Phase 4 | Pending |
 | WORK-02 | Phase 4 | Pending |
 | WORK-03 | Phase 4 | Pending |

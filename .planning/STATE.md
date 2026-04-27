@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-04-27)
 
 **Core value:** Three skills that save time on the three most repeated setup and framing tasks in a Claude Code session — prompt quality, skill authoring, and workspace setup.
-**Current focus:** Phase 3 - Skill Creator Skill
+**Current focus:** Phase 4 - Workspace Creator Skill
 
 ## Current Position
 
-Phase: 3 of 4 (Skill Creator Skill)
-Plan: 0 of 1 in current phase
-Status: Ready to execute
-Last activity: 2026-04-27 — Phase 3 planned (1 plan, 1 wave — research + pattern mapping + verification passed)
+Phase: 4 of 4 (Workspace Creator Skill)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-04-27 — Phase 3 complete (skill-create body written, 7/7 must-haves verified, human UAT pending)
 
-Progress: [████░░░░░░] 50%
+Progress: [██████░░░░] 75%
 
 ## Performance Metrics
 
@@ -29,6 +29,7 @@ Progress: [████░░░░░░] 50%
 |-------|-------|-------|----------|
 | 1. Plugin Scaffolding | 3 | ~15 min | ~5 min |
 | 2. Prompt Improvement Skill | 1 | ~15 min | ~15 min |
+| 3. Skill Creator Skill | 1 | ~20 min | ~20 min |
 
 **Recent Trend:**
 - Last 5 plans: 01-01, 01-02, 01-03
@@ -69,5 +70,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-27
-Stopped at: Phase 3 planned — 1 plan ready (03-01-PLAN.md). Run /gsd-execute-phase 3.
-Resume file: .planning/phases/03-skill-creator-skill/03-01-PLAN.md
+Stopped at: Phase 3 complete — human UAT pending for /skill-create interactive flow.
+Resume file: .planning/phases/04-workspace-creator-skill/ (needs planning)
