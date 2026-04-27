@@ -10,11 +10,11 @@
 
 ### Plugin Scaffolding
 
-- [ ] **SETUP-01**: Repository has valid `.claude-plugin/plugin.json` manifest with `name`, `description`, and `author` fields enabling `/plugin install`
-- [ ] **SETUP-02**: Skills directory structure exists at `skills/improve-prompt/`, `skills/skill-create/`, and `skills/workspace-create/` with placeholder SKILL.md entrypoints
-- [ ] **SETUP-03**: `docs/` folder exists at repo root with `docs/index.md` explaining which Claude Code documentation files to download and where to place them
-- [ ] **SETUP-04**: Install/symlink script or documented instructions for deploying plugin skills to the Claude Code plugin cache or `~/.claude/skills/`
-- [ ] **SETUP-05**: `settings.local.json` template pre-configured with `Write(.claude/**)` and `Write(~/.claude/**)` permission allows to work around v2.1.79+ permission regression
+- [x] **SETUP-01**: Repository has valid `.claude-plugin/plugin.json` manifest with `name`, `description`, and `author` fields enabling `/plugin install` *(Phase 1)*
+- [x] **SETUP-02**: Skills directory structure exists at `skills/improve-prompt/`, `skills/skill-create/`, and `skills/workspace-create/` with placeholder SKILL.md entrypoints *(Phase 1)*
+- [x] **SETUP-03**: `docs/` folder exists at repo root with `docs/index.md` explaining which Claude Code documentation files to download and where to place them *(Phase 1)*
+- [x] **SETUP-04**: Install/symlink script or documented instructions for deploying plugin skills to the Claude Code plugin cache or `~/.claude/skills/` *(Phase 1)*
+- [x] **SETUP-05**: `settings.local.json` template pre-configured with `Write(.claude/**)` and `Write(~/.claude/**)` permission allows to work around v2.1.79+ permission regression *(Phase 1)*
 
 ### Prompt Improvement
 
@@ -68,11 +68,11 @@
 
 | REQ-ID | Phase | Status |
 |--------|-------|--------|
-| SETUP-01 | Phase 1 | Pending |
-| SETUP-02 | Phase 1 | Pending |
-| SETUP-03 | Phase 1 | Pending |
-| SETUP-04 | Phase 1 | Pending |
-| SETUP-05 | Phase 1 | Pending |
+| SETUP-01 | Phase 1 | Complete |
+| SETUP-02 | Phase 1 | Complete |
+| SETUP-03 | Phase 1 | Complete |
+| SETUP-04 | Phase 1 | Complete |
+| SETUP-05 | Phase 1 | Complete |
 | PROMPT-01 | Phase 2 | Pending |
 | PROMPT-02 | Phase 2 | Pending |
 | PROMPT-03 | Phase 2 | Pending |
