@@ -61,7 +61,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User receives 5-6 targeted interview questions, each presenting proposed answers to react to rather than blank fields to fill in
   4. Generated SKILL.md is displayed for review and confirmation before any file is written
   5. After confirmation, the skill is written to exactly `~/.claude/skills/<name>/SKILL.md` and is available in all future Claude Code sessions
-**Plans**: TBD
+**Plans**: 1 plan
+
+**Wave 1** *(single plan — Phase 3 is one focused SKILL.md body edit)*
+- [ ] 03-01-PLAN.md — Write skill-create SKILL.md instruction body (skills/skill-create/SKILL.md)
 
 ### Phase 4: Workspace Creator Skill
 **Goal**: Users can run a guided interview and receive a fully scaffolded workspace with a populated CLAUDE.md derived from their answers
@@ -84,5 +87,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Plugin Scaffolding | 3/3 | Complete | 2026-04-27 |
 | 2. Prompt Improvement Skill | 1/1 | Complete | 2026-04-27 |
-| 3. Skill Creator Skill | 0/? | Not started | - |
+| 3. Skill Creator Skill | 0/1 | Not started | - |
 | 4. Workspace Creator Skill | 0/? | Not started | - |
