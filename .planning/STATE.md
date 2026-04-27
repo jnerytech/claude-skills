@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-04-27)
 
 **Core value:** Three skills that save time on the three most repeated setup and framing tasks in a Claude Code session — prompt quality, skill authoring, and workspace setup.
-**Current focus:** Phase 2 - Prompt Improvement Skill
+**Current focus:** Phase 3 - Skill Creator Skill
 
 ## Current Position
 
-Phase: 2 of 4 (Prompt Improvement Skill)
-Plan: 1 of 1 in current phase
-Status: Phase complete — ready for /gsd-verify-work
-Last activity: 2026-04-27 — Phase 2 plan 02-01 executed (SKILL.md body written)
+Phase: 3 of 4 (Skill Creator Skill)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-04-27 — Phase 2 complete (human UAT approved, /improve-prompt skill verified)
 
 Progress: [████░░░░░░] 50%
 
@@ -69,5 +69,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-27
-Stopped at: Phase 2 plan 02-01 executed — run `/gsd-verify-work` to verify Phase 2 deliverables
-Resume file: .planning/phases/02-prompt-improvement-skill/02-01-SUMMARY.md
+Stopped at: Phase 2 verified and complete — ready to discuss/plan Phase 3 (skill-create)
+Resume file: .planning/phases/02-prompt-improvement-skill/02-VERIFICATION.md

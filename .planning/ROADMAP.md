@@ -13,7 +13,7 @@ Three Claude Code slash-command skills packaged as a single installable plugin. 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Plugin Scaffolding** - Repo structure, plugin manifest, docs index, and permission workaround in place *(completed 2026-04-27)*
-- [ ] **Phase 2: Prompt Improvement Skill** - /improve-prompt skill rewrites rough prompts in chat with no file writes
+- [x] **Phase 2: Prompt Improvement Skill** - /improve-prompt skill rewrites rough prompts in chat with no file writes *(completed 2026-04-27)*
 - [ ] **Phase 3: Skill Creator Skill** - /skill-create interviews user and writes a new skill globally to ~/.claude/skills/
 - [ ] **Phase 4: Workspace Creator Skill** - /workspace-create guides full workspace setup with populated CLAUDE.md
 
@@ -83,6 +83,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Plugin Scaffolding | 3/3 | Complete | 2026-04-27 |
-| 2. Prompt Improvement Skill | 1/1 | Executed — awaiting /gsd-verify-work | 2026-04-27 |
+| 2. Prompt Improvement Skill | 1/1 | Complete | 2026-04-27 |
 | 3. Skill Creator Skill | 0/? | Not started | - |
 | 4. Workspace Creator Skill | 0/? | Not started | - |
