@@ -269,6 +269,8 @@ The same rule applies to multi-line code-block injection syntax in SKILL.md (` `
 
 **Resolution for the CONTEXT.md example:** The worked examples in the SKILL.md body should use 4-backtick outer fences. The CONTEXT.md `<specifics>` section captures the *desired output format*, not the encoding used to achieve it in SKILL.md.
 
+**Runtime note:** At runtime, the model reads SKILL.md as raw text, not rendered Markdown. Claude produces its output as plain Markdown — lines like `## Original`, triple backtick, text, triple backtick — with no outer wrapper. This means user-visible chat rendering is always correct. The 4-backtick rule applies only to worked examples and documentation encoded *inside* SKILL.md, not to Claude's output.
+
 ---
 
 ### Pitfall 2: Empty `$ARGUMENTS` Not Handled
