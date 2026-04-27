@@ -17,7 +17,7 @@ Three skills that save time on the three most repeated setup and framing tasks i
 ### Active
 
 - [x] **Prompt improvement skill** — slash command that takes the user's rough prompt and rewrites it optimizing for clarity/specificity, context richness, and structure; outputs the improved version in chat. Validated in Phase 2 (2026-04-27)
-- [ ] **Skill creator skill** — slash command where user describes a desired skill; Claude reads pre-downloaded docs from `docs/` folder inside the skill directory, interviews the user with targeted questions, then generates the skill file saved globally to `~/.claude/skills/`
+- [x] **Skill creator skill** — slash command where user describes a desired skill; Claude reads pre-downloaded docs from `references/` folder inside the skill directory (per D-04), interviews the user with 5 targeted AskUserQuestion calls, then generates and writes the skill file globally to `$USERPROFILE/.claude/skills/` (per D-09). Validated in Phase 3 (2026-04-27; human UAT pending)
 - [ ] **Workspace creator skill** — full guided setup slash command that asks workspace name, repos to include, and purpose; scaffolds complete workspace structure (`.workspace/refs/`, `.workspace/docs/`, `.workspace/logs/`, `.workspace/scratch/`, `.workspace/context/`, `.workspace/outputs/`, `.workspace/sessions/`, `.claude/`, `.vscode/`) with a populated CLAUDE.md at the workspace root
 
 ### Out of Scope
