@@ -29,7 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `docs/index.md` exists and lists exactly which Claude Code documentation files to download and where to place them
   4. Install instructions exist and document how to deploy skills to `~/.claude/skills/`
   5. `settings.local.json` template exists with `Write(.claude/**)` and `Write(~/.claude/**)` allow rules so the permission regression in v2.1.79+ does not block skill writes
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Plugin manifest, install docs, permissions template (.claude-plugin/plugin.json, README.md, settings.local.json.example, .gitignore)
+- [ ] 01-02-PLAN.md — Skill stub directories with valid SKILL.md placeholders and supporting directories (skills/*/SKILL.md, references/.gitkeep, templates/.gitkeep)
+- [ ] 01-03-PLAN.md — Documentation index for skill-create's on-demand doc loading (docs/index.md)
 
 ### Phase 2: Prompt Improvement Skill
 **Goal**: Users can invoke /improve-prompt with a rough prompt and receive a clearly improved version in chat
@@ -74,7 +79,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Plugin Scaffolding | 0/? | Not started | - |
+| 1. Plugin Scaffolding | 0/3 | Not started | - |
 | 2. Prompt Improvement Skill | 0/? | Not started | - |
 | 3. Skill Creator Skill | 0/? | Not started | - |
 | 4. Workspace Creator Skill | 0/? | Not started | - |
