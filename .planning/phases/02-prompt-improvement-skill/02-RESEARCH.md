@@ -402,17 +402,17 @@ Implication for this skill: improve-prompt is invoked once, produces output, and
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Empty `$ARGUMENTS` exact behavior**
    - What we know: Official docs state `$ARGUMENTS` expands to the full argument string. If no argument is typed, the string is empty.
    - What's unclear: Whether Claude Code inserts a space or empty string vs. omits the substitution entirely.
-   - Recommendation: Add explicit empty-check guard to body (D-07 already covers vague inputs; zero-input is an adjacent case). Verify by testing `/improve-prompt` with no argument after implementation.
+   - RESOLVED: Add explicit empty-check guard to body (D-07 already covers vague inputs; zero-input is an adjacent case). The guard checks `empty or contains only whitespace`. Verify by testing `/improve-prompt` with no argument after implementation.
 
 2. **How Claude renders output sections — are `##` headers rendered or shown raw?**
    - What we know: Skills output Markdown to chat. Claude Code chat renders Markdown.
    - What's unclear: Whether `## Original` renders as a bold header or is shown as `## Original` raw text in the terminal interface.
-   - Recommendation: This does not affect implementation — the body should use `##` headers as per D-01. If the user sees raw `##`, that is a rendering setting issue, not a skill issue.
+   - RESOLVED: No implementation change needed — use `##` headers as per D-01. If the user sees raw `##`, that is a rendering setting issue, not a skill issue. The plan proceeds with `##` headers per the locked decision.
 
 ---
 
