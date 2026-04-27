@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-04-27)
 ## Current Position
 
 Phase: 2 of 4 (Prompt Improvement Skill)
-Plan: 0 of 1 in current phase
-Status: Ready to execute
-Last activity: 2026-04-27 — Phase 2 planned (1 plan, verification passed)
+Plan: 1 of 1 in current phase
+Status: Phase complete — ready for /gsd-verify-work
+Last activity: 2026-04-27 — Phase 2 plan 02-01 executed (SKILL.md body written)
 
-Progress: [██░░░░░░░░] 25%
+Progress: [████░░░░░░] 50%
 
 ## Performance Metrics
 
@@ -28,6 +28,7 @@ Progress: [██░░░░░░░░] 25%
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. Plugin Scaffolding | 3 | ~15 min | ~5 min |
+| 2. Prompt Improvement Skill | 1 | ~15 min | ~15 min |
 
 **Recent Trend:**
 - Last 5 plans: 01-01, 01-02, 01-03
@@ -47,6 +48,9 @@ Recent decisions affecting current work:
 - Research: AskUserQuestion hard limit of 4 options per call — interview question banks must stay at ≤4 options
 - Research: Windows paths require explicit `$USERPROFILE` resolution (Issue #30553) — relevant to skill-create and workspace-create
 - Phase 1: All scaffolding artifacts verified and human-approved — plugin.json, README, settings.local.json.example, .gitignore, 3 SKILL.md stubs, docs/index.md
+- Phase 2: Heuristic table (not prose) for idiom injection rules — deterministic scanning per Pattern 3
+- Phase 2: 4-backtick outer fences for worked examples containing inner triple-backtick fences (Pitfall 1)
+- Phase 2: Empty-args guard returns usage message and stops — does not attempt rewrite (Pitfall 2)
 
 ### Pending Todos
 
@@ -65,5 +69,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-04-27
-Stopped at: Phase 2 context gathered — run `/gsd-plan-phase 2` to plan
-Resume file: .planning/phases/02-prompt-improvement-skill/02-CONTEXT.md
+Stopped at: Phase 2 plan 02-01 executed — run `/gsd-verify-work` to verify Phase 2 deliverables
+Resume file: .planning/phases/02-prompt-improvement-skill/02-01-SUMMARY.md

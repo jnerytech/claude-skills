@@ -49,7 +49,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 1 plan
 
 **Wave 1** *(single plan — Phase 2 is one focused SKILL.md body edit)*
-- [ ] 02-01-PLAN.md — Write improve-prompt SKILL.md instruction body (skills/improve-prompt/SKILL.md)
+- [x] 02-01-PLAN.md — Write improve-prompt SKILL.md instruction body (skills/improve-prompt/SKILL.md) *(executed 2026-04-27)*
 
 ### Phase 3: Skill Creator Skill
 **Goal**: Users can describe a skill they want built, answer targeted interview questions, and have the generated SKILL.md written globally
@@ -83,6 +83,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Plugin Scaffolding | 3/3 | Complete | 2026-04-27 |
-| 2. Prompt Improvement Skill | 0/1 | Not started | - |
+| 2. Prompt Improvement Skill | 1/1 | Executed — awaiting /gsd-verify-work | 2026-04-27 |
 | 3. Skill Creator Skill | 0/? | Not started | - |
 | 4. Workspace Creator Skill | 0/? | Not started | - |

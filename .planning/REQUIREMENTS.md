@@ -18,11 +18,11 @@
 
 ### Prompt Improvement
 
-- [ ] **PROMPT-01**: User can invoke `/improve-prompt <rough-prompt>` and receive a rewritten version in chat (no file writes, no external dependencies)
-- [ ] **PROMPT-02**: Skill rewrites input optimizing for all four dimensions: clarity/specificity, context richness, structure, and scope/verification criteria
-- [ ] **PROMPT-03**: Output shows original prompt and improved prompt side by side in chat
-- [ ] **PROMPT-04**: Output includes "what changed" annotation explaining each material improvement made
-- [ ] **PROMPT-05**: Improved prompt injects Claude Code-specific idioms where appropriate (`@file` references, explicit verification asks, scope bounds)
+- [x] **PROMPT-01**: User can invoke `/improve-prompt <rough-prompt>` and receive a rewritten version in chat (no file writes, no external dependencies) *(Phase 2 — structural verification passed; manual UAT pending /gsd-verify-work)*
+- [x] **PROMPT-02**: Skill rewrites input optimizing for all four dimensions: clarity/specificity, context richness, structure, and scope/verification criteria *(Phase 2 — manual UAT pending /gsd-verify-work)*
+- [x] **PROMPT-03**: Output shows original prompt and improved prompt side by side in chat *(Phase 2 — structural verification passed)*
+- [x] **PROMPT-04**: Output includes "what changed" annotation explaining each material improvement made *(Phase 2 — manual UAT pending /gsd-verify-work)*
+- [x] **PROMPT-05**: Improved prompt injects Claude Code-specific idioms where appropriate (`@file` references, explicit verification asks, scope bounds) *(Phase 2 — manual UAT pending /gsd-verify-work)*
 
 ### Skill Creator
 
@@ -73,11 +73,11 @@
 | SETUP-03 | Phase 1 | Complete |
 | SETUP-04 | Phase 1 | Complete |
 | SETUP-05 | Phase 1 | Complete |
-| PROMPT-01 | Phase 2 | Pending |
-| PROMPT-02 | Phase 2 | Pending |
-| PROMPT-03 | Phase 2 | Pending |
-| PROMPT-04 | Phase 2 | Pending |
-| PROMPT-05 | Phase 2 | Pending |
+| PROMPT-01 | Phase 2 | Structural: Complete; Manual UAT: Pending |
+| PROMPT-02 | Phase 2 | Structural: Complete; Manual UAT: Pending |
+| PROMPT-03 | Phase 2 | Structural: Complete; Manual UAT: Pending |
+| PROMPT-04 | Phase 2 | Structural: Complete; Manual UAT: Pending |
+| PROMPT-05 | Phase 2 | Structural: Complete; Manual UAT: Pending |
 | SKILL-01 | Phase 3 | Pending |
 | SKILL-02 | Phase 3 | Pending |
 | SKILL-03 | Phase 3 | Pending |
