@@ -1,1 +1,3 @@
 settings.local.json
+plugins/claude-skills/.claude-plugin
+plugins/claude-skills/skills

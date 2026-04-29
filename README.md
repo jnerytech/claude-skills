@@ -19,25 +19,52 @@ Four Claude Code slash-command skills that improve day-to-day workflow.
 git clone https://github.com/jnerytech/claude-skills ~/repos/claude-skills
 ```
 
-### 2. Copy skills
+### 2. Create symlinks
 
-**Global — available in all projects:**
+The marketplace structure requires symlinks pointing to the repo root. Run the setup script once:
+
 ```bash
-mkdir -p ~/.claude/skills
-cp -r ~/repos/claude-skills/skills/* ~/.claude/skills/
+cd ~/repos/claude-skills
+bash setup.sh
 ```
 
-**Project-local — available only in the current project:**
-```bash
-mkdir -p .claude/skills
-cp -r ~/repos/claude-skills/skills/* .claude/skills/
+This creates `plugins/claude-skills/.claude-plugin` and `plugins/claude-skills/skills` as symlinks.
+
+### 3. Register the local marketplace
+
+Inside Claude Code:
+
+```
+/plugin marketplace add /home/dev/repos/claude-skills
 ```
 
-### 3. Reload
+This adds an entry to `~/.claude/settings.json`:
 
-Run `/reload-plugins` inside Claude Code. The four slash commands are now available.
+```json
+"extraKnownMarketplaces": {
+  "claude-skills-local": {
+    "source": { "source": "directory", "path": "/home/dev/repos/claude-skills" }
+  }
+}
+```
 
-### 4. Copy the permissions template (if using file-writing skills)
+### 4. Enable the plugin
+
+Open `~/.claude/settings.json` and add:
+
+```json
+"enabledPlugins": {
+  "claude-skills@claude-skills-local": true
+}
+```
+
+> `/plugin install` fails with local sources on Claude Code 2.1.123 — the `enabledPlugins` entry must be added manually.
+
+### 5. Restart Claude Code
+
+The four slash commands are now available: `/improve-prompt`, `/skill-create`, `/workspace-create`, `/save-session`.
+
+### 6. Copy the permissions template (if using file-writing skills)
 
 ```bash
 cp ~/repos/claude-skills/settings.local.json.example .claude/settings.local.json
@@ -49,12 +76,9 @@ Required for `/skill-create` and `/workspace-create` to write files (workaround 
 
 ```bash
 cd ~/repos/claude-skills && git pull
-cp -r skills/* ~/.claude/skills/   # or project-local path
 ```
 
-Then `/reload-plugins`.
-
-> **Note:** `/plugin install <local-path>` is marketplace-only and does not work with local directories.
+Then restart Claude Code (no re-registration needed — symlinks remain valid).
 
 ## Skills
 

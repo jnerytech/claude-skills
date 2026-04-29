@@ -1,0 +1,13 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-skills-local",
+  "description": "Local marketplace for claude-skills plugin",
+  "owner": { "name": "jnery.tech", "email": "jnery.tech@gmail.com" },
+  "plugins": [
+    {
+      "name": "claude-skills",
+      "description": "Four Claude Code skills: /improve-prompt rewrites rough prompts, /skill-create interviews you and generates a new skill, /workspace-create scaffolds a workspace with a populated CLAUDE.md, /save-session summarizes and saves the current session",
+      "source": "./plugins/claude-skills"
+    }
+  ]
+}
