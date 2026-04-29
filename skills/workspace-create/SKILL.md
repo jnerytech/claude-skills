@@ -1,8 +1,10 @@
 ---
 name: workspace-create
-description: "Guides a workspace setup interview and scaffolds .workspace/, .claude/, .vscode/ directories with a fully populated CLAUDE.md. Use when the user invokes /workspace-create or asks to 'set up a workspace', 'create a workspace', or 'scaffold a new workspace'. Do NOT use for setting up individual project repos."
+description: "Guides a workspace setup interview (name, repos, goal, stack), scaffolds .workspace/, .claude/, .vscode/ directories under ./<name>/, and writes a fully populated CLAUDE.md from a template. Manual invocation only via /workspace-create [name]."
+argument-hint: [workspace-name]
 allowed-tools: [Read, Write, Bash]
 disable-model-invocation: true
+model: haiku
 ---
 
 # Workspace Create
@@ -11,31 +13,24 @@ The user invoked this with: $ARGUMENTS
 
 ## Stage 1: Check for workspace name hint
 
-```
-The user invoked this with: $ARGUMENTS
+If `$ARGUMENTS` is non-empty and not only whitespace:
 
-If $ARGUMENTS is non-empty and not only whitespace:
-  1. Validate the proposed name immediately:
-     ```bash
-     NAME="<$ARGUMENTS>"
-     if [[ ! "$NAME" =~ ^[a-z][a-z0-9-]*$ ]] || [[ "$NAME" == *".."* ]] || \
-        [[ "$NAME" == *"/"* ]] || [[ "$NAME" == *"\\"* ]]; then
-       echo "INVALID"
-     else
-       echo "VALID"
-     fi
-     ```
-     If INVALID: output "The name `<$ARGUMENTS>` is not valid. Workspace names must
-     match `^[a-z][a-z0-9-]*$` with no path separators." and stop.
-  2. Only if VALID: Output "I'll name this workspace `<$ARGUMENTS>` — change it?"
-     Wait for the user's reply before proceeding to Stage 2.
-     - If the user says "yes", "ok", or equivalent: proceed to Stage 2 using the proposed name
-       (skip Q1 in Stage 2 — name is confirmed).
-     - If the user provides a different name: treat that response as the new proposed name,
-       validate it per the Q1 Bash block, then proceed to Stage 2.
+1. Validate the proposed name:
+   ```bash
+   NAME="$ARGUMENTS"
+   if [[ ! "$NAME" =~ ^[a-z][a-z0-9-]*$ ]] || [[ "$NAME" == *".."* ]] || [[ "$NAME" == *"/"* ]] || [[ "$NAME" == *"\\"* ]]; then
+     echo "INVALID"
+   else
+     echo "VALID"
+   fi
+   ```
+   If INVALID: output "The name `$ARGUMENTS` is not valid. Workspace names must match `^[a-z][a-z0-9-]*$` with no path separators." and stop.
 
-If $ARGUMENTS is empty or whitespace, proceed directly to Stage 2 with no proposed name.
-```
+2. If VALID: output "I'll name this workspace `$ARGUMENTS` — change it?" and wait for the user's reply before proceeding to Stage 2.
+   - If the user says "yes", "ok", or equivalent: proceed to Stage 2 using the proposed name (skip Q1 in Stage 2 — name is confirmed).
+   - If the user provides a different name: treat that response as the new proposed name, validate it per the same Bash block, then proceed to Stage 2.
+
+If `$ARGUMENTS` is empty or whitespace, proceed directly to Stage 2 with no proposed name.
 
 ## Stage 2: Conduct workspace interview
 

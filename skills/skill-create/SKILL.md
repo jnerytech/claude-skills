@@ -4,6 +4,7 @@ description: "Interviews the user about trigger, tools, output, and guards, then
 argument-hint: [skill-description]
 allowed-tools: [Read, Glob, Grep, Write, Bash]
 disable-model-invocation: true
+model: opus
 ---
 
 # Skill Create

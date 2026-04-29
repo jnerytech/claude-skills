@@ -1,9 +1,10 @@
 ---
 name: save-session
-description: Summarize the current session and save to .workspace/sessions/. Use when closing a session, wrapping up work, or when user says "salva a sessão", "save session", "resumo da sessão", or invokes /save-session.
+description: "Summarizes the current session (what was done, decisions, pendências) and writes a markdown file to .workspace/sessions/<timestamp>-<topic>.md. Manual invocation only via /save-session [topic]."
 disable-model-invocation: true
 allowed-tools: Write
 argument-hint: "[topic]"
+model: haiku
 ---
 
 ## Context

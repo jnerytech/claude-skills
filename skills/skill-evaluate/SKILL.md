@@ -4,6 +4,7 @@ description: "Audits an existing SKILL.md against the Claude Code skills spec an
 argument-hint: [skill-name-or-path]
 allowed-tools: [Read, Glob, Grep, Bash]
 disable-model-invocation: true
+model: opus
 ---
 
 # Skill Evaluate

@@ -1,8 +1,9 @@
 ---
 name: improve-prompt
-description: "Rewrites a rough prompt for clarity, specificity, context richness, and structure. Use when the user invokes /improve-prompt or asks to 'improve this prompt', 'rewrite this prompt', or 'make this prompt clearer'. Do NOT use for general writing improvements unrelated to Claude Code prompts."
-argument-hint: <rough-prompt-text>
+description: "Rewrites a rough prompt for clarity, specificity, context richness, and structure. Outputs three sections (Original / Improved / What Changed) and injects Claude Code idioms (@file, verification, scope bounds) only when cued. Manual invocation only via /improve-prompt <rough-prompt>."
+argument-hint: [rough-prompt-text]
 disable-model-invocation: true
+model: haiku
 ---
 
 # Improve Prompt
