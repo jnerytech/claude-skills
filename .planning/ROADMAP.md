@@ -91,4 +91,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Plugin Scaffolding | 3/3 | Complete | 2026-04-27 |
 | 2. Prompt Improvement Skill | 1/1 | Complete | 2026-04-27 |
 | 3. Skill Creator Skill | 1/1 | Complete | 2026-04-27 |
-| 4. Workspace Creator Skill | 0/1 | Not started | - |
+| 4. Workspace Creator Skill | 0/1 | Planned | - |
