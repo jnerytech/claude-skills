@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
-# Install claude-skills into ~/.claude/skills (global) or a custom path.
+# Install claude-skills skills.
 #
-# Global:
-#   bash <(curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh)
+# Global (~/.claude/skills):
+#   curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash
 #
-# Project-local (run from project root):
-#   bash <(curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh) "$(pwd)"
+# Project-local (.claude/skills inside project root):
+#   curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash -s "$(pwd)"
 
 set -e
 
-DEST="${1:-$HOME/.claude/skills}"
+# If a project root is passed, install into <root>/.claude/skills
+# If no arg, install globally into ~/.claude/skills
+if [ -n "$1" ]; then
+  DEST="$1/.claude/skills"
+else
+  DEST="$HOME/.claude/skills"
+fi
+
 TMP=$(mktemp -d)
 
 echo "Installing claude-skills to: $DEST"
