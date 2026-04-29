@@ -26,9 +26,9 @@ git clone https://github.com/jnerytech/claude-skills ~/repos/claude-skills
 curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash
 ```
 
-**Project-local** — available only in the current project:
+**Project-local** — run from the project root:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash -s /path/to/project
+curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash -s .
 ```
 
 Then run `/reload-plugins` in Claude Code.

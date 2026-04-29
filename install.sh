@@ -4,15 +4,14 @@
 # Global (~/.claude/skills):
 #   curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash
 #
-# Project-local (.claude/skills inside project root):
-#   curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash -s /path/to/project
+# Project-local (run from project root):
+#   curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash -s .
 
 set -e
 
-# If a project root is passed, install into <root>/.claude/skills
-# If no arg, install globally into ~/.claude/skills
+# Resolve arg to absolute path, default to ~/.claude/skills
 if [ -n "$1" ]; then
-  DEST="$1/.claude/skills"
+  DEST="$(cd "$1" && pwd)/.claude/skills"
 else
   DEST="$HOME/.claude/skills"
 fi
