@@ -1,6 +1,6 @@
 ---
 name: workspace-create
-description: "Guides a workspace setup interview (name, repos, goal, stack), scaffolds .workspace/, .claude/, .vscode/ directories under ./<name>/, and writes a fully populated CLAUDE.md from a template. Manual invocation only via /workspace-create [name]."
+description: "Scaffolds a workspace directory (.workspace/, .claude/, .vscode/) under ./<name>/ with a populated CLAUDE.md. Asks the user a single batched chat question to gather goal, repos, and stack — no per-question round-trips. Manual invocation only via /workspace-create [name]."
 argument-hint: [workspace-name]
 allowed-tools: [Read, Write, Bash]
 disable-model-invocation: true
@@ -11,67 +11,58 @@ model: haiku
 
 The user invoked this with: $ARGUMENTS
 
-## Stage 1: Check for workspace name hint
+## Stage 1 — Resolve and validate the workspace name
 
-If `$ARGUMENTS` is non-empty and not only whitespace:
+If `$ARGUMENTS` is non-empty and not only whitespace, treat it as the proposed name. Otherwise, ask in chat:
 
-1. Validate the proposed name:
-   ```bash
-   NAME="$ARGUMENTS"
-   if [[ ! "$NAME" =~ ^[a-z][a-z0-9-]*$ ]] || [[ "$NAME" == *".."* ]] || [[ "$NAME" == *"/"* ]] || [[ "$NAME" == *"\\"* ]]; then
-     echo "INVALID"
-   else
-     echo "VALID"
-   fi
-   ```
-   If INVALID: output "The name `$ARGUMENTS` is not valid. Workspace names must match `^[a-z][a-z0-9-]*$` with no path separators." and stop.
+> What should I name this workspace? Use lowercase letters, numbers, and hyphens only (e.g. `my-project`).
 
-2. If VALID: output "I'll name this workspace `$ARGUMENTS` — change it?" and wait for the user's reply before proceeding to Stage 2.
-   - If the user says "yes", "ok", or equivalent: proceed to Stage 2 using the proposed name (skip Q1 in Stage 2 — name is confirmed).
-   - If the user provides a different name: treat that response as the new proposed name, validate it per the same Bash block, then proceed to Stage 2.
+Wait for the reply, then treat that as the proposed name.
 
-If `$ARGUMENTS` is empty or whitespace, proceed directly to Stage 2 with no proposed name.
+Validate via Bash before continuing:
 
-## Stage 2: Conduct workspace interview
-
-Ask each question in chat (NOT via AskUserQuestion — these are freeform inputs that exceed AskUserQuestion's 4-option limit). Wait for the user's reply before asking the next question.
-
-**Q1 — Workspace name** (skip if Stage 1 proposed a name and user confirmed it):
-> "What should I name this workspace? Use lowercase letters, numbers, and hyphens only (e.g. `my-project`). This becomes the directory name."
-
-Validate name immediately after receiving the answer: run in Bash:
 ```bash
-NAME="<user-answer>"
+NAME="$ARGUMENTS"
 if [[ ! "$NAME" =~ ^[a-z][a-z0-9-]*$ ]] || [[ "$NAME" == *".."* ]] || [[ "$NAME" == *"/"* ]] || [[ "$NAME" == *"\\"* ]]; then
   echo "INVALID"
 else
   echo "VALID"
 fi
 ```
-If INVALID: explain the constraint and re-ask Q1. Do not proceed until validation passes.
 
-**Q2 — Repos to include:**
-> "Which repos will this workspace include? List them separated by commas or newlines."
+If `INVALID`: output `The name \`<name>\` is not valid. Workspace names must match \`^[a-z][a-z0-9-]*$\` with no path separators.` and re-ask. Do not proceed until validation passes.
 
-**Q3 — Per-repo purpose (iterative):**
-For each repo named in Q2, ask in chat:
-> "What is the purpose of `<repo-name>`?"
+Confirm the resolved name with one chat line — no AskUserQuestion:
 
-Collect one answer per repo. If the user listed 3 repos, ask 3 separate questions.
+> I'll name this workspace `<name>` — change it? Reply 'yes' or supply a different name.
 
-**Q4 — Overall workspace goal:**
-> "In 1-3 sentences, what is the overall goal of this workspace?"
+If the user supplies a different name, validate it the same way and loop. Otherwise proceed.
 
-If the answer is blank or less than 5 words, re-ask: "Could you describe the goal in a bit more detail? This becomes the opening paragraph of your CLAUDE.md."
+## Stage 2 — Batched workspace interview
 
-**Q5 — Primary stack (optional):**
-> "What is the primary language or stack? (Press Enter or type 'skip' to leave blank)"
+Send a **single chat message** that asks for everything at once. Do not break the questions into separate turns. Do not use AskUserQuestion (the answers are freeform and exceed the 4-option limit anyway).
 
-If blank or 'skip', record as empty string — Stage 7 will use the fallback "Not specified".
+Output exactly:
 
-## Stage 3: Show scaffold plan preview
+> Tell me about workspace `<name>` in **one reply**:
+>
+> 1. **Goal** — 1-3 sentences describing what this workspace is for.
+> 2. **Repos** — list the repos as `<repo-name>: <one-line purpose>` lines, one per repo. Reply `none` to skip.
+> 3. **Stack** — primary language or framework. Reply `skip` to leave blank.
+>
+> Reply `minimal` to use defaults for everything (no repos, no stack, goal = "Workspace for `<name>`").
 
-After all interview answers are collected, show the full scaffold plan in chat before writing anything. Use a 4-backtick outer fence for the preview block (prevents inner triple-backtick fences from terminating the preview):
+Wait for the user's reply. Parse it:
+
+- **Goal** — required. If blank or under 5 words and the user did not say `minimal`, re-ask only that field with `Could you describe the goal in a bit more detail? It becomes the opening paragraph of CLAUDE.md.`
+- **Repos** — split on newlines or commas. Each entry must contain a `:` separator. If absent, treat the entire entry as repo name with purpose `Not specified`. Empty list or `none` → fallback `| _none_ | No repos specified |`.
+- **Stack** — single string. Empty or `skip` → fallback `Not specified`.
+
+Record all three values for Stage 3.
+
+## Stage 3 — Show scaffold preview
+
+Display the scaffold plan inside a 4-backtick outer fence (prevents inner triple-backticks from terminating the block):
 
 ````markdown
 Workspace: <name>
@@ -98,27 +89,31 @@ CLAUDE.md preview:
 ...
 ````
 
-Then ask in chat (not via AskUserQuestion):
-> "Shall I create all these files? Reply 'yes' to proceed or describe changes."
+Then ask in chat:
 
-Wait for the user to reply before proceeding to Stage 4. If the user describes changes, incorporate them and show the updated preview. Do not proceed until the user says 'yes' or equivalent.
+> Shall I create all these files? Reply 'yes' to proceed or describe changes.
 
-## Stage 4: Check for existing workspace
+Wait for the reply. If the user describes changes, incorporate them and re-show the preview. Do not proceed until the user replies 'yes' or equivalent.
+
+## Stage 4 — Check for existing workspace
 
 Before any mkdir or Write:
+
 ```bash
 WORKSPACE_ROOT="$(pwd)/<validated-name>"
 test -d "$WORKSPACE_ROOT" && echo "EXISTS" || echo "NEW"
 ```
 
-If the result is EXISTS, output the following warning in chat:
-> "A directory named `<name>` already exists at `<WORKSPACE_ROOT>`. Proceeding will add files into it without deleting what's there. Continue?"
+If `EXISTS`, warn:
 
-Wait for the user to confirm before proceeding. If they decline, stop.
+> A directory named `<name>` already exists at `<WORKSPACE_ROOT>`. Proceeding will add files into it without deleting what's there. Continue?
 
-## Stage 5: Scaffold directories
+Wait for confirmation. If the user declines, stop.
+
+## Stage 5 — Scaffold directories
 
 Run a single Bash block creating all 9 directories atomically:
+
 ```bash
 WORKSPACE_ROOT="$(pwd)/<validated-name>"
 mkdir -p \
@@ -133,11 +128,11 @@ mkdir -p \
   "$WORKSPACE_ROOT/.vscode"
 ```
 
-Do NOT use relative paths. Always use `$WORKSPACE_ROOT` (absolute via `$(pwd)`). Never use `$USERPROFILE` — this workspace is CWD-relative, not global.
+Always use `$WORKSPACE_ROOT` (absolute via `$(pwd)`). Never use `$USERPROFILE` — this workspace is CWD-relative, not global.
 
-## Stage 6: Write README files
+## Stage 6 — Write README files
 
-Write exactly 7 README.md files — one per .workspace/ subdirectory. Use Write tool for each. The content is a single line:
+Write exactly 7 README.md files via Write — one per `.workspace/` subdirectory. Single-line content each:
 
 - `$WORKSPACE_ROOT/.workspace/refs/README.md` → `Reference materials and external resources for this workspace.`
 - `$WORKSPACE_ROOT/.workspace/docs/README.md` → `Documentation files and guides for workspace projects.`
@@ -147,41 +142,47 @@ Write exactly 7 README.md files — one per .workspace/ subdirectory. Use Write 
 - `$WORKSPACE_ROOT/.workspace/outputs/README.md` → `Generated outputs and artifacts from Claude sessions.`
 - `$WORKSPACE_ROOT/.workspace/sessions/README.md` → `Per-session working directories.`
 
-## Stage 7: Generate CLAUDE.md content
+## Stage 7 — Generate CLAUDE.md content
 
-Read the template file:
+Read the template:
+
 ```
 ${CLAUDE_SKILL_DIR}/templates/CLAUDE.md.template
 ```
 
-This is a mandatory Read step — not implied behavior. The template contains 6 markers. Replace each marker with the interview answer:
+Mandatory Read step. The template contains 6 markers. Replace each with the interview values from Stage 2:
 
-| Marker | Source | Rule |
-|--------|--------|------|
-| `{{WORKSPACE_NAME}}` | Q1 answer | Required — re-ask if blank |
-| `{{WORKSPACE_GOAL}}` | Q4 answer | Required — re-ask if blank |
-| `{{REPO_MAP}}` | Q2+Q3 answers | Format each as a table row: `\| <repo> \| <purpose> \|` — one row per repo. Fallback if no repos: `\| _none_ \| No repos specified \|` |
-| `{{STACK}}` | Q5 answer | Fallback: `Not specified` |
-| `{{CREATED_DATE}}` | Bash `date +%Y-%m-%d` | Fallback: use today's date as literal string if Bash fails |
-| `{{CONVENTIONS}}` | Derived: combine stack + goal into 1-2 practical rules | Fallback: `Follow standard conventions for the stack` |
+| Marker | Source | Fallback |
+|---|---|---|
+| `{{WORKSPACE_NAME}}` | Stage 1 name | required — already validated |
+| `{{WORKSPACE_GOAL}}` | Stage 2 goal | re-ask if blank |
+| `{{REPO_MAP}}` | Stage 2 repos | format each as `\| <repo> \| <purpose> \|` (one row per repo). If empty list: `\| _none_ \| No repos specified \|` |
+| `{{STACK}}` | Stage 2 stack | `Not specified` |
+| `{{CREATED_DATE}}` | `date +%Y-%m-%d` | today's date as literal string |
+| `{{CONVENTIONS}}` | derive 1-2 practical rules from stack + goal | `Follow standard conventions for the stack` |
 
-After replacing all markers, verify the result line count:
+After replacing all markers, verify line count:
+
 ```bash
 echo "<generated-content>" | wc -l
 ```
-If the count is >= 195, trim the `{{REPO_MAP}}` rows first (summarize multiple purposes on one row), then shorten the `{{CONVENTIONS}}` section, until the count is < 195. Only then write.
+
+If ≥ 195, trim `{{REPO_MAP}}` rows first (summarize multiple purposes on one row), then shorten `{{CONVENTIONS}}`, until count is < 195. Only then write.
 
 Write the populated content to `$WORKSPACE_ROOT/CLAUDE.md`.
 
-**Zero tolerance for unreplaced markers:** Before writing, scan the generated content for any remaining `{{` patterns. If any are found, replace them with the appropriate fallback. Never write `{{MARKER}}` to the final CLAUDE.md.
+**Zero tolerance for unreplaced markers:** before writing, scan for any remaining `{{` patterns. If any are found, replace with the appropriate fallback. Never write `{{MARKER}}` to the final CLAUDE.md.
 
-## Stage 8: Write .claude/settings.local.json
+## Stage 8 — Write `.claude/settings.local.json`
 
-Write a minimal settings file inside the workspace's .claude directory:
+Write a minimal settings file:
+
 ```
 $WORKSPACE_ROOT/.claude/settings.local.json
 ```
+
 Content:
+
 ```json
 {
   "permissions": {
@@ -192,48 +193,53 @@ Content:
 }
 ```
 
-This mirrors the Phase 1 template and is a useful default for the workspace. It is workspace-local — it does NOT affect `~/.claude/`.
+This is workspace-local. It does NOT affect `~/.claude/`.
 
-## Stage 9: Confirm
+## Stage 9 — Confirm
 
 Output in chat:
-> "Workspace `<name>` created at `./<name>/`. CLAUDE.md populated. Open it to review."
 
-## Worked example — end-to-end workspace creation
+> Workspace `<name>` created at `./<name>/`. CLAUDE.md populated. Open it to review.
 
-When the user runs `/workspace-create my-apis`, the full flow looks like this:
+## Worked example — end-to-end
 
-- **Stage 1:** `$ARGUMENTS` = "my-apis" — propose name "my-apis", user confirms
-- **Stage 2:** Q2 → "api-gateway, billing-service"; Q3 → "api-gateway: Routes all traffic", "billing-service: Handles subscriptions"; Q4 → "Track and debug API + billing interactions across services."; Q5 → "TypeScript, Node.js"
-- **Stage 3:** Show preview tree with CLAUDE.md header; user replies "yes"
-- **Stage 4:** `test -d "$(pwd)/my-apis"` → NEW; proceed
-- **Stage 5:** Run single mkdir batch creating all 9 directories
-- **Stage 6:** Write 7 README files with one-line content
-- **Stage 7:** Read `${CLAUDE_SKILL_DIR}/templates/CLAUDE.md.template`; replace markers:
+User runs `/workspace-create my-apis`.
+
+- **Stage 1:** `$ARGUMENTS` = "my-apis". Validation PASS. Confirm: "I'll name this workspace `my-apis` — change it?". User: "yes".
+- **Stage 2:** Send batched ask. User replies in one message:
+
+  > 1. Track and debug API + billing interactions across services.
+  > 2. api-gateway: Routes all traffic
+  >    billing-service: Handles subscriptions
+  > 3. TypeScript, Node.js
+
+  Parse: goal = "Track and debug…", repos = 2 entries, stack = "TypeScript, Node.js".
+
+- **Stage 3:** Show preview tree + CLAUDE.md header. User: "yes".
+- **Stage 4:** `test -d "$(pwd)/my-apis"` → NEW. Proceed.
+- **Stage 5:** Run single mkdir batch (9 directories).
+- **Stage 6:** Write 7 README files.
+- **Stage 7:** Read template, replace markers:
   - `{{WORKSPACE_NAME}}` → `my-apis`
   - `{{WORKSPACE_GOAL}}` → `Track and debug API + billing interactions across services.`
-  - `{{REPO_MAP}}` → two separate table rows (one per line):
-      | api-gateway | Routes all traffic |
-      | billing-service | Handles subscriptions |
+  - `{{REPO_MAP}}` → two table rows
   - `{{STACK}}` → `TypeScript, Node.js`
-  - `{{CREATED_DATE}}` → `2026-04-29` (from Bash)
+  - `{{CREATED_DATE}}` → `2026-04-29`
   - `{{CONVENTIONS}}` → `Use async/await consistently. Avoid mutating shared state across services.`
-  - Verify: `wc -l` → 58 lines (< 195 — no trimming needed)
-  - Verify: no `{{` patterns remain
-  - Write to `my-apis/CLAUDE.md`
-- **Stage 8:** Write `my-apis/.claude/settings.local.json`
+  - `wc -l` → 58 lines (< 195). Write.
+- **Stage 8:** Write `my-apis/.claude/settings.local.json`.
 - **Stage 9:** "Workspace `my-apis` created at `./my-apis/`. CLAUDE.md populated. Open it to review."
 
 ## Pre-mkdir checks (before Stage 5)
 
-1. Workspace name validated with `^[a-z][a-z0-9-]*$` — no `/`, `..`, or `\` in name.
-2. All 5 interview questions answered (name, repos, per-repo purpose, goal, stack — or blank/skip recorded for Q5).
-3. `{{WORKSPACE_NAME}}` and `{{WORKSPACE_GOAL}}` are non-empty (re-asked if needed).
-4. `{{STACK}}` has either a user-provided value or the fallback "Not specified".
-5. `{{REPO_MAP}}` has either formatted table rows or the fallback `| _none_ | No repos specified |`.
-6. `{{CONVENTIONS}}` has either a derived value or the fallback "Follow standard conventions for the stack".
-7. Scaffold plan preview shown to user; user replied 'yes' or equivalent.
-8. Existing workspace check ran before mkdir; user confirmed if EXISTS.
+1. Workspace name validated with `^[a-z][a-z0-9-]*$` — no `/`, `..`, or `\`.
+2. Stage 2 batched ask answered (or `minimal` accepted).
+3. `{{WORKSPACE_GOAL}}` non-empty (re-asked if needed).
+4. `{{STACK}}` has a value or the fallback "Not specified".
+5. `{{REPO_MAP}}` has formatted table rows or the fallback `| _none_ | No repos specified |`.
+6. `{{CONVENTIONS}}` has a derived value or the fallback "Follow standard conventions for the stack".
+7. Scaffold preview shown to user; user replied 'yes' or equivalent.
+8. Existing-workspace check ran before mkdir; user confirmed if `EXISTS`.
 9. All 9 `mkdir -p` paths use `$WORKSPACE_ROOT` (absolute) — no relative paths, no `$USERPROFILE`.
 
 ## Pre-Write checks (before Stage 7 Write call)
