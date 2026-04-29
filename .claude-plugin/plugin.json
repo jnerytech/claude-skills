@@ -1,6 +1,6 @@
 {
   "name": "claude-skills",
-  "description": "Three Claude Code skills: /improve-prompt rewrites rough prompts, /skill-create interviews you and generates a new skill, /workspace-create scaffolds a workspace with a populated CLAUDE.md",
+  "description": "Four Claude Code skills: /improve-prompt rewrites rough prompts, /skill-create interviews you and generates a new skill, /workspace-create scaffolds a workspace with a populated CLAUDE.md, /save-session summarizes and saves the current session",
   "author": {
     "name": "jnery.tech",
     "email": "jnery.tech@gmail.com"

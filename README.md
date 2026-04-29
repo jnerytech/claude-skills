@@ -1,12 +1,13 @@
 # Claude Code Skills Plugin
 
-Three Claude Code slash-command skills that improve day-to-day workflow.
+Four Claude Code slash-command skills that improve day-to-day workflow.
 
 ## What It Does
 
 - `/improve-prompt <rough-prompt>` — rewrites a rough prompt for clarity, specificity, context richness, and structure
 - `/skill-create [skill-description]` — interviews you, reads local docs, and generates a new skill written globally to `~/.claude/skills/`
 - `/workspace-create` — guided interview that scaffolds a full workspace with a populated CLAUDE.md
+- `/save-session [topic]` — summarizes the current session and saves it to `.workspace/sessions/`
 
 ## Getting Started
 
@@ -28,7 +29,7 @@ Three Claude Code slash-command skills that improve day-to-day workflow.
    ```
    This grants the skills the file-write permissions they need (workaround for v2.1.79+ regression).
 
-The plugin's three skills are now available as slash commands: `/improve-prompt`, `/skill-create`, `/workspace-create`.
+The plugin's four skills are now available as slash commands: `/improve-prompt`, `/skill-create`, `/workspace-create`, `/save-session`.
 
 ## Skills
 
@@ -49,6 +50,12 @@ Interviews you about the skill you want to build, reads locally pre-downloaded C
 Guides you through a workspace setup interview (name, repos, purposes, goals), then scaffolds a complete workspace structure with a fully populated CLAUDE.md.
 
 **Usage:** `/workspace-create`
+
+### /save-session
+
+Summarizes the current session (what was done, decisions made, open items) and writes it to `.workspace/sessions/<timestamp>-<topic>.md`. Trigger with `/save-session`, "save session", or "salva a sessão".
+
+**Usage:** `/save-session [optional-topic]`
 
 ## Docs Setup
 

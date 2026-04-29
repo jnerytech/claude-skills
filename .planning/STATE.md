@@ -58,6 +58,11 @@ Recent decisions affecting current work:
 
 None.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+
 ### Blockers/Concerns
 
 - `docs/` folder must be populated by user before `/skill-create` is useful — Phase 3 prerequisite, not a phase output; document clearly in Phase 3

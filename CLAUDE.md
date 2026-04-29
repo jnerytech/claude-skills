@@ -2,10 +2,11 @@
 
 ## Project
 
-Three Claude Code slash-command skills packaged as a plugin:
+Four Claude Code slash-command skills packaged as a plugin:
 - `/improve-prompt` — rewrites rough prompts for clarity, context, structure, scope
 - `/skill-create` — interviews user, reads local docs/, generates skill to `~/.claude/skills/`
 - `/workspace-create` — guided interview → scaffolds `.workspace/` + populated CLAUDE.md
+- `/save-session` — summarizes current session and saves to `.workspace/sessions/`
 
 See `.planning/PROJECT.md` for full context.
 
