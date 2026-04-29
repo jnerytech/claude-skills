@@ -46,7 +46,12 @@ The `references/` folder contains three additional docs. Load each only when its
 | Local path to a file | `Read` the file. |
 | Local path to a directory | `Glob` for known foreign patterns inside it (`.cursorrules`, `*.mdc`, `.clinerules`, `*.md`, `config.json`). If exactly one match, treat as the source. If many, list them and ask the user which to migrate. If none, error and stop. |
 
-Capture both the raw content and the resolved filename/extension for Stage 4.
+Capture: raw content, resolved filename/extension, and the **source location class** for Stage 8:
+
+- `repo` — local path resolves under the current working directory (the repo root, detected via `git rev-parse --show-toplevel` or fallback to CWD).
+- `external` — URL, `file://` outside CWD, or absolute path outside the repo.
+
+Source class drives the default write destination in Stage 8.
 
 ## Stage 4 — Detect the source format
 
@@ -168,15 +173,30 @@ Ground every Claude Code frontmatter field name and capability in what was read 
 
 ## Stage 7 — Preview and confirm
 
-Check whether the target path already exists:
+### Pick the destination
+
+Default destination depends on the source-location class recorded in Stage 3:
+
+| Source class | Default destination |
+|---|---|
+| `repo` (source path lives under the repo root) | `<repo-root>/.claude/skills/<name>/SKILL.md` — keep the migrated skill alongside the source so the team gets it via git, not just the user who ran the migration. |
+| `external` (URL or path outside the repo) | `$USERPROFILE/.claude/skills/<name>/SKILL.md` — user-global, since there is no repo to attach it to. |
+
+Resolve the repo root with `git rev-parse --show-toplevel` once. Fall back to `pwd` if not in a git repo. The user can override the default in the confirm prompt (e.g. "write it to `$USERPROFILE` instead", "put it in `./skills/<name>` not `./.claude/skills/<name>`").
+
+Never silently escalate a `repo`-class source to a user-global write. If the user does not override, Stage 8 must use the repo path.
+
+### Existence check
+
+Check whether the chosen target path already exists:
 
 ```bash
-test -f "$USERPROFILE/.claude/skills/<name>/SKILL.md" && echo "EXISTS" || echo "NEW"
+test -f "<target-path>/SKILL.md" && echo "EXISTS" || echo "NEW"
 ```
 
 If `EXISTS`, prepend this warning to the preview:
 
-> A skill named `<name>` already exists at $USERPROFILE/.claude/skills/<name>/SKILL.md. Overwrite?
+> A skill named `<name>` already exists at `<target-path>/SKILL.md`. Overwrite?
 
 Display the full generated SKILL.md (frontmatter + body) inside a 4-backtick outer fence:
 
@@ -193,7 +213,9 @@ Below the preview, output a one-line inference summary and a confirm prompt in c
 
 > **Migrated from:** `<format>` · **name** `<name>` · **tools** `<tools or "none">` · **trigger** `<user-only or auto>` · **aux files** `<count or "none">` · **refs consulted:** `<comma-separated reference filenames, or "spec only">`
 >
-> Reply 'yes' to write, or describe changes (e.g. "rename to foo-bar", "add Bash to tools", "make it auto-invocable", "drop the Notes section").
+> **Source class:** `<repo|external>` · **Destination:** `<absolute target path>`
+>
+> Reply 'yes' to write, or describe changes (e.g. "rename to foo-bar", "add Bash to tools", "make it auto-invocable", "drop the Notes section", "write to user-global instead").
 
 Wait for the user reply. If they describe changes, regenerate Stage 6 with updated settings and show the preview again. Loop until 'yes'.
 
@@ -206,24 +228,34 @@ Validate first, mkdir second, Write third. Never reorder.
    - Contains no `/`, `..`, or `\`
    If validation fails, output an error and stop — do not run mkdir or Write.
 
-2. **Create the directory** via Bash:
+2. **Resolve `SKILL_DIR`** from the destination chosen in Stage 7:
    ```bash
+   # repo source (default):
+   REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+   SKILL_DIR="$REPO_ROOT/.claude/skills/<validated-name>"
+
+   # external source (default) or user override:
    SKILL_DIR="$USERPROFILE/.claude/skills/<validated-name>"
-   mkdir -p "$SKILL_DIR"
    ```
-   Use `$USERPROFILE`, not `~` — the Write tool does not expand `~` on Windows (Issue #30553). `$USERPROFILE` is reliably exported in git-bash on Windows.
+   Use `$USERPROFILE`, not `~`, on the user-global path — the Write tool does not expand `~` on Windows (Issue #30553). `$USERPROFILE` is reliably exported in git-bash on Windows. For repo-rooted paths, prefer the absolute path returned by `git rev-parse --show-toplevel` so the Write call works regardless of the current subdirectory.
 
-3. **Write** the generated SKILL.md content to `$SKILL_DIR/SKILL.md`.
+3. **Create** the directory: `mkdir -p "$SKILL_DIR"`.
 
-4. **Copy auxiliary files** (if any were identified in Stage 5) into `$SKILL_DIR/` using `Read` + `Write`. Preserve original filenames.
+4. **Write** the generated SKILL.md content to `$SKILL_DIR/SKILL.md`.
+
+5. **Copy auxiliary files** (if any were identified in Stage 5) into `$SKILL_DIR/` using `Read` + `Write`. Preserve original filenames.
+
+6. **Skill loading note** — for repo-rooted writes, the new skill loads as a project-scope skill (`<plugin-or-project>:<name>` namespace) without a global restart, since the repo's `.claude/skills/` is already watched. For user-global writes, restart is needed if the directory did not exist when the session started.
 
 ## Stage 9 — Confirm
 
 Output in chat:
 
-> Migrated `<original source>` → `$USERPROFILE/.claude/skills/<name>/SKILL.md`<br>
+> Migrated `<original source>` → `<resolved SKILL_DIR>/SKILL.md`<br>
 > `<aux file count>` auxiliary files copied.<br>
-> Restart Claude Code to load the skill.
+> `<one of>`:<br>
+> &nbsp;&nbsp;• Repo-scope skill — commit `<repo-root>/.claude/skills/<name>/` to share with the team.<br>
+> &nbsp;&nbsp;• User-global skill — restart Claude Code if the skill directory is brand new.
 
 ## Worked example — Cursor `.mdc` rule
 
@@ -231,7 +263,7 @@ User runs `/skill-migrate ./.cursor/rules/api-style.mdc`.
 
 - **Stage 1:** non-empty → proceed.
 - **Stage 2:** read spec.
-- **Stage 3:** `Read` the file. Source content:
+- **Stage 3:** `Read` the file. Path resolves under repo root → source class `repo`. Source content:
   ```
   ---
   description: "Enforce REST API conventions"
@@ -249,9 +281,9 @@ User runs `/skill-migrate ./.cursor/rules/api-style.mdc`.
   - trigger: `alwaysApply: true` → auto-invoke (omit `disable-model-invocation`)
   - argument-hint: omit
 - **Stage 6:** generate.
-- **Stage 7:** preview, summary `Migrated from: Cursor rule (modern) · name api-style · tools none · trigger auto · aux files none`. User replies `yes`.
-- **Stage 8:** validate `api-style`, mkdir, write.
-- **Stage 9:** confirm.
+- **Stage 7:** preview, summary `Migrated from: Cursor rule (modern) · name api-style · trigger auto · Source class: repo · Destination: <repo>/.claude/skills/api-style/SKILL.md`. User replies `yes`.
+- **Stage 8:** validate `api-style`, resolve `SKILL_DIR=<repo>/.claude/skills/api-style`, mkdir, write.
+- **Stage 9:** confirm. Note repo-scope: commit `.claude/skills/api-style/` so the team picks it up.
 
 ## Worked example — OpenAI GPT JSON export
 
@@ -277,7 +309,8 @@ Before executing the write step (Stage 8), confirm:
 4. Name was inferred and validated (`^[a-z0-9]+(-[a-z0-9]+)*$`, no `/`, `..`, or `\`).
 5. Body content was preserved verbatim from the source; foreign frontmatter stripped, prose unchanged.
 6. Generated SKILL.md was shown in a 4-backtick fenced preview before writing.
-7. Inference summary listed source format, name, tools, trigger, aux file count, and refs consulted.
-8. User confirmed with "yes" or equivalent in chat.
-9. `mkdir -p` ran before the Write call.
-10. `$USERPROFILE` was used — not `~`.
+7. Inference summary listed source format, name, tools, trigger, aux file count, refs consulted, source class, and resolved destination path.
+8. **Source class `repo` writes go under `<repo-root>/.claude/skills/<name>/`, not `$USERPROFILE`** — only escalate to user-global on explicit user override or `external` source class.
+9. User confirmed with "yes" or equivalent in chat.
+10. `mkdir -p` ran before the Write call.
+11. `$USERPROFILE` was used only on the user-global branch — never on the repo branch — and `~` was not used at all (Windows expansion bug).
