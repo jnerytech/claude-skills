@@ -76,7 +76,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `.claude/` and `.vscode/` directories are created at workspace root alongside `.workspace/`
   4. `CLAUDE.md` is created at workspace root with all sections fully populated from interview answers — no stubs, no unfilled placeholders
   5. Each `.workspace/` subdirectory contains a one-line README explaining its purpose
-**Plans**: TBD
+**Plans**: 1 plan
+
+**Wave 1** *(single plan — Phase 4 is one focused SKILL.md body write + template creation)*
+- [ ] 04-01-PLAN.md — Write workspace-create SKILL.md instruction body and CLAUDE.md.template (skills/workspace-create/SKILL.md, skills/workspace-create/templates/CLAUDE.md.template)
 
 ## Progress
 
@@ -88,4 +91,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Plugin Scaffolding | 3/3 | Complete | 2026-04-27 |
 | 2. Prompt Improvement Skill | 1/1 | Complete | 2026-04-27 |
 | 3. Skill Creator Skill | 1/1 | Complete | 2026-04-27 |
-| 4. Workspace Creator Skill | 0/? | Not started | - |
+| 4. Workspace Creator Skill | 0/1 | Not started | - |
