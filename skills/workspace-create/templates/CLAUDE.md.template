@@ -1,0 +1,37 @@
+# {{WORKSPACE_NAME}}
+
+{{WORKSPACE_GOAL}}
+
+**Created:** {{CREATED_DATE}}
+
+## Repositories
+
+| Repo | Purpose |
+|------|---------|
+{{REPO_MAP}}
+
+## Directory Map
+
+| Directory | Purpose |
+|-----------|---------|
+| `.workspace/refs/` | Reference materials and external resources |
+| `.workspace/docs/` | Documentation files and guides |
+| `.workspace/logs/` | Session logs and activity records |
+| `.workspace/scratch/` | Temporary scratch space for experiments |
+| `.workspace/context/` | Persistent context files shared across sessions |
+| `.workspace/outputs/` | Generated outputs and artifacts |
+| `.workspace/sessions/` | Per-session working directories |
+
+## Stack / Language
+
+{{STACK}}
+
+## Session Conventions
+
+- Start each session by reviewing `.workspace/context/` for persistent notes
+- Log session summaries to `.workspace/logs/`
+- Place experimental work in `.workspace/scratch/` before promoting to a repo
+
+## Constraints
+
+{{CONVENTIONS}}
