@@ -227,9 +227,8 @@ When the user runs `/workspace-create my-apis`, the full flow looks like this:
 - **Stage 8:** Write `my-apis/.claude/settings.local.json`
 - **Stage 9:** "Workspace `my-apis` created at `./my-apis/`. CLAUDE.md populated. Open it to review."
 
-## Final checks before writing
+## Pre-mkdir checks (before Stage 5)
 
-Before executing Stage 5 (mkdir), confirm:
 1. Workspace name validated with `^[a-z][a-z0-9-]*$` — no `/`, `..`, or `\` in name.
 2. All 5 interview questions answered (name, repos, per-repo purpose, goal, stack — or blank/skip recorded for Q5).
 3. `{{WORKSPACE_NAME}}` and `{{WORKSPACE_GOAL}}` are non-empty (re-asked if needed).
@@ -239,6 +238,9 @@ Before executing Stage 5 (mkdir), confirm:
 7. Scaffold plan preview shown to user; user replied 'yes' or equivalent.
 8. Existing workspace check ran before mkdir; user confirmed if EXISTS.
 9. All 9 `mkdir -p` paths use `$WORKSPACE_ROOT` (absolute) — no relative paths, no `$USERPROFILE`.
+
+## Pre-Write checks (before Stage 7 Write call)
+
 10. All 6 markers replaced in generated CLAUDE.md; zero `{{` patterns remain.
 11. `wc -l` on generated CLAUDE.md content is < 195 before Write.
 12. All Write paths use `$WORKSPACE_ROOT` — not `~`, not `$USERPROFILE`, not a hardcoded path.
