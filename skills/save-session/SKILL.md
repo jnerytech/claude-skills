@@ -2,7 +2,7 @@
 name: save-session
 description: "Summarizes the current session (what was done, decisions, pendências) and writes a markdown file to .workspace/sessions/<timestamp>-<topic>.md. Manual invocation only via /save-session [topic]."
 disable-model-invocation: true
-allowed-tools: Write
+allowed-tools: [Write, Bash]
 argument-hint: "[topic]"
 model: haiku
 ---
@@ -16,13 +16,19 @@ model: haiku
 
 1. Derive a short kebab-case topic slug from `$ARGUMENTS` (if provided) or from the main subject of this session (2-4 words max).
 
-2. Build the output filename:
+2. Ensure the target directory exists. Run via Bash before any Write call:
+   ```bash
+   mkdir -p .workspace/sessions
+   ```
+   `mkdir -p` is idempotent — it creates `.workspace/` and `.workspace/sessions/` if missing, and is a no-op if they already exist.
+
+3. Build the output filename:
    ```
    .workspace/sessions/<timestamp>-<topic>.md
    ```
    where `<timestamp>` is the value from the Context block above (format: `YYYY-MM-DD-HH-MM`).
 
-3. Write the file using the Write tool. Content must follow this structure:
+4. Write the file using the Write tool. Content must follow this structure:
 
 ```markdown
 # Sessão <YYYY-MM-DD HH:MM> — <Topic human-readable>
