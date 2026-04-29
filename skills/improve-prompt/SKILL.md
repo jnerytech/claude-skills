@@ -1,7 +1,8 @@
 ---
 name: improve-prompt
-description: "Rewrites a rough prompt for clarity, specificity, context richness, and structure. Outputs three sections (Original / Improved / What Changed) and injects Claude Code idioms (@file, verification, scope bounds) only when cued. Manual invocation only via /improve-prompt <rough-prompt>."
+description: "Rewrites a rough prompt for clarity, specificity, context richness, and structure. Scans the codebase (Glob/Grep) to fill in concrete file paths and symbols when the rough prompt only implies them. Outputs just the improved prompt — no Original / What Changed sections. Manual invocation only via /improve-prompt <rough-prompt>."
 argument-hint: [rough-prompt-text]
+allowed-tools: [Read, Glob, Grep]
 disable-model-invocation: true
 model: haiku
 ---
@@ -10,7 +11,7 @@ model: haiku
 
 The user invoked this with: $ARGUMENTS
 
-## When to act
+## Stage 1 — When to act
 
 If `$ARGUMENTS` is empty or contains only whitespace, output exactly:
 
@@ -19,121 +20,113 @@ If `$ARGUMENTS` is empty or contains only whitespace, output exactly:
 
 Then stop — do not attempt a rewrite, do not ask a clarifying question.
 
-Otherwise, treat everything in `$ARGUMENTS` as the rough prompt the user wants rewritten, and proceed.
+Otherwise, treat everything in `$ARGUMENTS` as the rough prompt and proceed.
 
-## How to rewrite
+## Stage 2 — Detect context cues
 
-Apply these four dimensions to the rough prompt. Each definition is a concrete action verb — apply only the dimensions that need work, not all four mechanically:
+Skim the rough prompt for cues that imply concrete code references but don't name them. Each cue triggers a scan in Stage 3:
 
-- **Clarity / specificity** — Name the exact file, function, or behavior involved. Replace pronouns like "it" or "that" with concrete nouns.
-- **Context richness** — Add an `@file` reference when a file is mentioned or implied. Add the relevant constraint (language, framework, version) when known.
-- **Structure** — Open with an imperative verb. Separate "what to do" from "how to verify" into distinct sentences or a small numbered list.
-- **Scope / verification** — State what Claude should NOT change. Specify how to confirm the task is done (a test command, a behavior to observe, an acceptance check).
+| Cue in prompt | What to resolve |
+|---|---|
+| "the X middleware", "the X handler", "the X module" | actual file path of the named module |
+| "the auth flow", "the login flow", "the db layer" | files implementing that subsystem |
+| "database credentials", "API keys", "secrets" | files with connection strings, `process.env.*`, config loaders |
+| "the bug in <feature>" with no file named | likely owner files of that feature |
+| "the code", "this codebase", "the app" with no specifics | top-level entry points and config |
+| Verb-only ("fix it", "refactor", "update") with no target | abort scan — placeholder route only |
 
-When rewriting the Improved section, render the user's task in your own clearer words — but never lose the user's intent. The Original section, by contrast, is the user's input verbatim (see "How to format output" below).
+If no cue is present, skip Stage 3 entirely and go to Stage 4.
 
-## Inject Claude Code idioms — only on cue
+## Stage 3 — Scan the codebase
 
-Apply these idioms only when their cue is present in the rough prompt. Do not add them indiscriminately:
+Run **at most 4 targeted operations** total — Glob and Grep combined. Do not load whole files; read only when a Glob/Grep hit needs disambiguation.
 
-| Idiom | Inject when | Example |
-|-------|-------------|---------|
-| `@file <path>` | A filename, path, or module name is mentioned or clearly implied (e.g. "the auth middleware") | `@file src/auth/middleware.ts` |
-| Verification ask | The task verb is fix, refactor, implement, migrate, add, update, or another code-change verb | "Run `npm test -- auth` to verify no regressions" |
-| Scope bounds | The prompt has no clear success criteria, or could be interpreted too broadly | "Focus only on the token expiry check; do not refactor the surrounding handler" |
+Patterns by cue type:
 
-When a filename is implied but not stated (e.g. the user says "auth middleware"), infer a plausible `@file` path rather than omitting the reference. A concrete-but-approximate reference like `@file auth/middleware.ts` is more useful than no reference, because Claude at invocation time will correct wrong guesses.
+- **Module name** (e.g. "auth middleware") → `Glob "**/auth*.{ts,js,py,go,rs,rb}"` and `Glob "**/*middleware*.{ts,js,py,go,rs,rb}"`
+- **Subsystem flow** (e.g. "login flow") → `Grep "login\|signIn\|authenticate"` with `output_mode: files_with_matches`
+- **Database/secrets** → `Grep "DATABASE_URL\|DB_HOST\|process\.env\|os\.environ\.get\|connection_string"` plus `Glob "**/{db,database,connection,config,env}*.{ts,js,py,go,yaml,yml,json}"`
+- **Generic "the codebase"** → `Glob "{package.json,pyproject.toml,Cargo.toml,go.mod,*.csproj}"` for stack identification
 
-## Handle low-information input
+Stop early when:
+- 1-3 strong candidate files surface — that is enough to substitute placeholders
+- The repo appears empty or scans return nothing relevant — fall back to placeholders
+- 4 operations have run regardless of result
 
-If the rough prompt is too vague to rewrite with full specificity (it is short, names no file, and describes no scope), produce the best rewrite you can using bracketed placeholders to mark structurally missing context. Examples of placeholders: `[describe symptom]`, `[specify the target file]`, `[expected vs actual behavior]`.
+Record the resolved paths/symbols for Stage 4.
 
-Do not ask a clarifying question first — the user invoked `/improve-prompt` for a fast turnaround. Always produce a rewrite.
+## Stage 4 — Rewrite using the 4 dimensions
 
-When (and only when) the input was detectably low-information — short, no file references, no describable scope — append a sharpen note after `## What Changed`:
+Apply these four dimensions only where the rough prompt is weak. Do not mechanically apply all four:
 
-> ⚠️ To sharpen further, add: [comma-separated list of context items that would improve the rewrite]
+- **Clarity / specificity** — Name the exact file, function, or behavior. Replace pronouns ("it", "that") with concrete nouns.
+- **Context richness** — Inject `@file <path>` when Stage 3 resolved a path. If a stack constraint (language, framework, version) is detectable from scan results (e.g. `package.json` showed Next.js), include it.
+- **Structure** — Open with an imperative verb. Separate "what to do" from "how to verify" into distinct sentences or a short list.
+- **Scope / verification** — State what Claude should NOT change. Specify how to confirm the task is done (test command, observable behavior, acceptance check).
 
-Do not add this note to already-decent prompts. Signal-to-noise matters.
+When Stage 3 resolved paths or symbols, substitute them directly — drop the `[placeholder]`. When Stage 3 did not resolve a piece of context, leave a tight bracketed placeholder (e.g. `[describe symptom]`).
 
-## How to format output
+Render the user's task in clearer words but never lose the user's intent.
 
-Output exactly three `##` sections in this order. Render both prompts inside triple-backtick fenced code blocks so the user can copy them. The `## What Changed` section is a bullet list, never a paragraph.
+## Stage 5 — Output
 
-````
-## Original
+Output **only** the improved prompt inside a single triple-backtick fenced code block. Do not emit `## Original`, `## What Changed`, or any other heading. Do not narrate what you scanned.
+
+Example output:
+
 ```
-[the user's rough prompt — verbatim, unchanged, do not "lightly clean up" the wording]
-```
-
-## Improved
-```
-[the rewritten prompt]
-```
-
-## What Changed
-- [Change label] — [one-sentence reason why it improves the prompt]
-- [Change label] — [one-sentence reason]
-````
-
-Each bullet in `## What Changed` follows the pattern `- [Change label] — [one-sentence reason why it improves the prompt]`.
-
-Only emit a bullet for a change you actually made. If a dimension was already strong in the original, omit its bullet — the goal is signal density, not exhaustive coverage. The "most impactful change first" ordering is preferred but not enforced.
-
-If the input was low-information, append the `⚠️ To sharpen further, add:` note on its own line below the bullet list.
-
-## Worked example — desired output for a code-change prompt
-
-When the user runs `/improve-prompt fix the auth bug`, your output should look like this:
-
-````markdown
-## Original
-```
-fix the auth bug
+[the rewritten prompt — single code block, copy-paste ready]
 ```
 
-## Improved
+If any bracketed placeholders remain in the rewrite (Stage 3 could not resolve them), append exactly one line below the fenced block:
+
+> ⚠️ To sharpen further, add: [comma-separated list of context items that would resolve the remaining placeholders]
+
+Do not add the sharpen note when every placeholder was resolved by the scan.
+
+## Worked example — code-change prompt with scan
+
+User runs `/improve-prompt fix the auth bug`.
+
+- Stage 2 detects the "auth" subsystem cue.
+- Stage 3 runs `Glob "**/auth*.{ts,js,py,go,rs,rb}"` → `src/auth/middleware.ts`, `src/auth/login.ts`. Then `Grep "expir"` in those files → hit on `middleware.ts:47` (`if (token.exp < Date.now())`).
+- Stage 4 rewrites with concrete file + line.
+- Stage 5 output:
+
 ```
-In auth/middleware.ts, the token expiry check uses `<` instead of `<=`. Fix it and run `npm test -- auth` to verify no regressions.
-```
-
-## What Changed
-- Added @file reference — gives Claude a precise entry point instead of searching the whole codebase
-- Added scope: narrowed to token expiry logic — prevents Claude from refactoring unrelated code
-- Added verification step — gives Claude a way to confirm its fix worked without being asked
-````
-
-(The 4-backtick fence above is only how this example is encoded inside SKILL.md so the inner triple-backticks render correctly. Your actual chat output uses triple-backtick fences as shown in the "How to format output" section.)
-
-## Worked example — desired output for a low-information prompt
-
-When the user runs `/improve-prompt fix it`, your output should look like this:
-
-````markdown
-## Original
-```
-fix it
+In @file src/auth/middleware.ts (line 47), the token expiry check uses `<` instead of `<=`. Fix that comparison and run `npm test -- auth` to verify no regressions. Do not refactor the surrounding handler.
 ```
 
-## Improved
+## Worked example — vague prompt, scan finds nothing
+
+User runs `/improve-prompt fix it`.
+
+- Stage 2 detects verb-only cue → skip Stage 3 entirely.
+- Stage 4 rewrites with placeholders for missing context.
+- Stage 5 output:
+
 ```
 Identify and fix the bug in [specify the target file] causing [describe symptom]. After fixing, run the relevant tests to confirm the regression is resolved.
 ```
 
-## What Changed
-- Added symptom placeholder — Claude needs to know what is broken to find the right bug
-- Added verification step — gives Claude a way to confirm the fix worked
+> ⚠️ To sharpen further, add: which file or feature is affected, and what the expected vs actual behavior is.
 
-⚠️ To sharpen further, add: which file or feature is affected, and what the expected vs actual behavior is.
-````
+## Worked example — database/secrets prompt with scan
+
+User runs `/improve-prompt coferir se o codigo usa dados de banco e url host no banco e no codigo`.
+
+- Stage 2 detects database/secrets cue.
+- Stage 3 runs `Glob "**/{db,database,connection,config,env}*.{ts,js,py,go,yaml,yml,json}"` → `src/db/client.ts`, `config/database.yml`. Then `Grep "DATABASE_URL\|DB_HOST\|process\.env"` → hits in those two files.
+- Stage 5 output:
+
+```
+Audit @file src/db/client.ts and @file config/database.yml to verify that database credentials and host URLs are not hardcoded in the application code. Confirm each connection value reads from `process.env.*` (or the documented secrets manager) — flag any string literal that bypasses the env layer. Document each violation with file:line and the remediation path.
+```
 
 ## Final checks before responding
 
-Before sending output, confirm:
-1. Three `##` sections are present in this exact order: Original, Improved, What Changed.
-2. The Original section contains the user's input verbatim, inside a fenced code block.
-3. The Improved section contains the rewrite, inside a fenced code block.
-4. Every bullet under `## What Changed` matches `- [Label] — [reason]`.
-5. Idioms (`@file`, verification, scope bounds) only appear if their cue was present.
-6. The sharpen note appears only if the input was detectably low-information.
-7. No file was written; no tool was invoked. The output is chat-only.
+1. Output is exactly one fenced code block containing only the rewritten prompt — no Original section, no What Changed bullets.
+2. Stage 3 ran ≤4 Glob/Grep operations total when cues were present.
+3. Resolved paths from Stage 3 appear inline in the rewrite (as `@file <path>` or directly named) — no stray `[target file]` placeholders left over a successful scan.
+4. The sharpen note appears only when placeholders remain unresolved.
+5. No file was written; no Bash command was run.
