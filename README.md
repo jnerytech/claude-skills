@@ -13,23 +13,48 @@ Four Claude Code slash-command skills that improve day-to-day workflow.
 
 **Prerequisites:** Claude Code installed and running.
 
-1. Clone this repo:
-   ```
-   git clone https://github.com/<your-username>/claude-skills <local-path>
-   ```
+### 1. Clone the repo
 
-2. Install the plugin:
-   ```
-   /plugin install <local-path>
-   ```
+```bash
+git clone https://github.com/jnerytech/claude-skills ~/repos/claude-skills
+```
 
-3. Copy the permissions template:
-   ```
-   cp settings.local.json.example settings.local.json
-   ```
-   This grants the skills the file-write permissions they need (workaround for v2.1.79+ regression).
+### 2. Copy skills
 
-The plugin's four skills are now available as slash commands: `/improve-prompt`, `/skill-create`, `/workspace-create`, `/save-session`.
+**Global — available in all projects:**
+```bash
+mkdir -p ~/.claude/skills
+cp -r ~/repos/claude-skills/skills/* ~/.claude/skills/
+```
+
+**Project-local — available only in the current project:**
+```bash
+mkdir -p .claude/skills
+cp -r ~/repos/claude-skills/skills/* .claude/skills/
+```
+
+### 3. Reload
+
+Run `/reload-plugins` inside Claude Code. The four slash commands are now available.
+
+### 4. Copy the permissions template (if using file-writing skills)
+
+```bash
+cp ~/repos/claude-skills/settings.local.json.example .claude/settings.local.json
+```
+
+Required for `/skill-create` and `/workspace-create` to write files (workaround for v2.1.79+ permission regression).
+
+### Updating
+
+```bash
+cd ~/repos/claude-skills && git pull
+cp -r skills/* ~/.claude/skills/   # or project-local path
+```
+
+Then `/reload-plugins`.
+
+> **Note:** `/plugin install <local-path>` is marketplace-only and does not work with local directories.
 
 ## Skills
 
