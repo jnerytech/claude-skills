@@ -1,6 +1,6 @@
 ---
 name: skill-create
-description: "Interviews the user and generates a new Claude Code skill (SKILL.md), then writes it to ~/.claude/skills/<name>/SKILL.md. Use when the user invokes /skill-create or asks to 'create a skill', 'make a new skill', or 'build a slash command'. Do NOT use for general task automation unrelated to skill authoring."
+description: "Interviews the user about trigger, tools, output, and guards, then generates a new Claude Code skill and writes it to ~/.claude/skills/<name>/SKILL.md. Manual invocation only via /skill-create <description>."
 argument-hint: [skill-description]
 allowed-tools: [Read, Glob, Grep, Write, Bash]
 disable-model-invocation: true
@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 The user invoked this with: $ARGUMENTS
 
-## When to act
+## Stage 1 — When to act
 
 If `$ARGUMENTS` is empty or contains only whitespace, output exactly:
 
@@ -21,7 +21,7 @@ Then stop — do not attempt an interview, do not ask a clarifying question.
 
 Otherwise proceed to Stage 2.
 
-## Read reference documentation
+## Stage 2 — Read reference documentation
 
 Before asking any interview question, read:
 
@@ -33,7 +33,7 @@ This is a mandatory numbered step — not implied behavior. Reading this file fi
 
 After the interview is complete (Stage 4), you will conditionally read additional reference files based on what the interview revealed (Stage 5).
 
-## Infer and confirm the skill name
+## Stage 3 — Infer and confirm the skill name
 
 Infer a kebab-case name from `$ARGUMENTS`. Propose it before any interview question:
 
@@ -47,7 +47,7 @@ If the user selects "Enter a different name" or "Other", accept their freeform i
 
 The name is confirmed here and does not change again — not at the preview step, not after confirmation.
 
-## Adaptive interview
+## Stage 4 — Adaptive interview
 
 Ask about the four required topics in order. Skip a topic only when `$ARGUMENTS` unambiguously answers it. Each AskUserQuestion uses ≤3 explicit options — the platform appends "Other" automatically, so the total must not exceed 4.
 
@@ -79,7 +79,7 @@ Options (≤3 explicit):
 - "Ask for clarification" — use AskUserQuestion to gather missing context before proceeding
 - "Apply a default and proceed" — fill in sensible defaults and continue without blocking
 
-## Conditional reference reads
+## Stage 5 — Conditional reference reads
 
 After the interview is complete, read additional reference docs only when the interview revealed a corresponding need. Do not read all four files unconditionally — load only what applies:
 
@@ -92,7 +92,7 @@ After the interview is complete, read additional reference docs only when the in
 
 If none of these conditions apply, proceed to Stage 6 with only the core reference already read.
 
-## Generate the SKILL.md content
+## Stage 6 — Generate the SKILL.md content
 
 Build the full SKILL.md in memory — do not write to disk yet. Use this frontmatter template:
 
@@ -114,7 +114,7 @@ Write the instruction body using the same structure as `/improve-prompt`:
 
 Ground every frontmatter field name and capability description in what you read from `extend-claude-with-skills.md` in Stage 2.
 
-## Preview the generated skill
+## Stage 7 — Preview the generated skill
 
 First, check if the target path already exists:
 
@@ -145,7 +145,7 @@ Then ask in chat (not via AskUserQuestion):
 
 Wait for the user to reply before proceeding to Stage 8. Do not use AskUserQuestion here — a chat-level reply is sufficient after a long interview.
 
-## Write the skill
+## Stage 8 — Write the skill
 
 Execute in this exact order — validate first, mkdir second, Write third. Never reorder.
 
@@ -164,7 +164,7 @@ Execute in this exact order — validate first, mkdir second, Write third. Never
 3. **Write the file**:
    Write the generated SKILL.md content (from Stage 6) to `$SKILL_DIR/SKILL.md`.
 
-## Confirm
+## Stage 9 — Confirm
 
 Output in chat:
 
