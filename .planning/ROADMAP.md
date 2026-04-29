@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Plugin Scaffolding** - Repo structure, plugin manifest, docs index, and permission workaround in place *(completed 2026-04-27)*
 - [x] **Phase 2: Prompt Improvement Skill** - /improve-prompt skill rewrites rough prompts in chat with no file writes *(completed 2026-04-27)*
 - [x] **Phase 3: Skill Creator Skill** - /skill-create interviews user and writes a new skill globally to ~/.claude/skills/ *(completed 2026-04-27)*
-- [ ] **Phase 4: Workspace Creator Skill** - /workspace-create guides full workspace setup with populated CLAUDE.md
+- [x] **Phase 4: Workspace Creator Skill** - /workspace-create guides full workspace setup with populated CLAUDE.md *(completed 2026-04-29)*
 
 ## Phase Details
 
@@ -79,7 +79,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 1 plan
 
 **Wave 1** *(single plan — Phase 4 is one focused SKILL.md body write + template creation)*
-- [ ] 04-01-PLAN.md — Write workspace-create SKILL.md instruction body and CLAUDE.md.template (skills/workspace-create/SKILL.md, skills/workspace-create/templates/CLAUDE.md.template)
+- [x] 04-01-PLAN.md — Write workspace-create SKILL.md instruction body and CLAUDE.md.template (skills/workspace-create/SKILL.md, skills/workspace-create/templates/CLAUDE.md.template) *(executed 2026-04-29)*
 
 ## Progress
 
@@ -91,4 +91,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Plugin Scaffolding | 3/3 | Complete | 2026-04-27 |
 | 2. Prompt Improvement Skill | 1/1 | Complete | 2026-04-27 |
 | 3. Skill Creator Skill | 1/1 | Complete | 2026-04-27 |
-| 4. Workspace Creator Skill | 0/1 | Planned | - |
+| 4. Workspace Creator Skill | 1/1 | Complete | 2026-04-29 |
