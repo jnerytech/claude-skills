@@ -14,9 +14,25 @@ The user invoked this with: $ARGUMENTS
 ```
 The user invoked this with: $ARGUMENTS
 
-If $ARGUMENTS is non-empty and not only whitespace, treat it as the proposed workspace name.
-Output: "I'll name this workspace `<$ARGUMENTS>` — change it?"
-Then proceed to Stage 2 using the proposed name.
+If $ARGUMENTS is non-empty and not only whitespace:
+  1. Validate the proposed name immediately:
+     ```bash
+     NAME="<$ARGUMENTS>"
+     if [[ ! "$NAME" =~ ^[a-z][a-z0-9-]*$ ]] || [[ "$NAME" == *".."* ]] || \
+        [[ "$NAME" == *"/"* ]] || [[ "$NAME" == *"\\"* ]]; then
+       echo "INVALID"
+     else
+       echo "VALID"
+     fi
+     ```
+     If INVALID: output "The name `<$ARGUMENTS>` is not valid. Workspace names must
+     match `^[a-z][a-z0-9-]*$` with no path separators." and stop.
+  2. Only if VALID: Output "I'll name this workspace `<$ARGUMENTS>` — change it?"
+     Wait for the user's reply before proceeding to Stage 2.
+     - If the user says "yes", "ok", or equivalent: proceed to Stage 2 using the proposed name
+       (skip Q1 in Stage 2 — name is confirmed).
+     - If the user provides a different name: treat that response as the new proposed name,
+       validate it per the Q1 Bash block, then proceed to Stage 2.
 
 If $ARGUMENTS is empty or whitespace, proceed directly to Stage 2 with no proposed name.
 ```
