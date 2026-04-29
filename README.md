@@ -19,18 +19,34 @@ Four Claude Code slash-command skills that improve day-to-day workflow.
 git clone https://github.com/jnerytech/claude-skills ~/repos/claude-skills
 ```
 
-### 2. Create symlinks
+### 2. Install via script (recommended)
 
-The marketplace structure requires symlinks pointing to the repo root. Run the setup script once:
+**Global** — available in all Claude Code sessions:
+```bash
+curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash
+```
+
+**Project-local** — available only in the current project:
+```bash
+curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash -s /path/to/project
+```
+
+Then run `/reload-plugins` in Claude Code.
+
+---
+
+### Alternative: manual plugin registration
+
+Only needed if you want to manage the skills via `/plugin` commands.
+
+#### 2a. Create symlinks
 
 ```bash
 cd ~/repos/claude-skills
 bash setup.sh
 ```
 
-This creates `plugins/claude-skills/.claude-plugin` and `plugins/claude-skills/skills` as symlinks.
-
-### 3. Register the local marketplace
+#### 2b. Register the local marketplace
 
 Inside Claude Code:
 
@@ -48,7 +64,7 @@ This adds an entry to `~/.claude/settings.json`:
 }
 ```
 
-### 4. Enable the plugin
+#### 2c. Enable the plugin
 
 Open `~/.claude/settings.json` and add:
 

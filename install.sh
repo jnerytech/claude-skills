@@ -5,7 +5,7 @@
 #   curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash
 #
 # Project-local (.claude/skills inside project root):
-#   curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash -s "$(pwd)"
+#   curl -fsSL https://raw.githubusercontent.com/jnerytech/claude-skills/master/install.sh | bash -s /path/to/project
 
 set -e
 
