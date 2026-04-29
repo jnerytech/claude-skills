@@ -217,7 +217,9 @@ When the user runs `/workspace-create my-apis`, the full flow looks like this:
 - **Stage 7:** Read `${CLAUDE_SKILL_DIR}/templates/CLAUDE.md.template`; replace markers:
   - `{{WORKSPACE_NAME}}` → `my-apis`
   - `{{WORKSPACE_GOAL}}` → `Track and debug API + billing interactions across services.`
-  - `{{REPO_MAP}}` → `| api-gateway | Routes all traffic |\n| billing-service | Handles subscriptions |`
+  - `{{REPO_MAP}}` → two separate table rows (one per line):
+      | api-gateway | Routes all traffic |
+      | billing-service | Handles subscriptions |
   - `{{STACK}}` → `TypeScript, Node.js`
   - `{{CREATED_DATE}}` → `2026-04-29` (from Bash)
   - `{{CONVENTIONS}}` → `Use async/await consistently. Avoid mutating shared state across services.`
