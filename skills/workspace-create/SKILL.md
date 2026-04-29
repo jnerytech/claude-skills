@@ -165,7 +165,7 @@ This is a mandatory Read step — not implied behavior. The template contains 6 
 |--------|--------|------|
 | `{{WORKSPACE_NAME}}` | Q1 answer | Required — re-ask if blank |
 | `{{WORKSPACE_GOAL}}` | Q4 answer | Required — re-ask if blank |
-| `{{REPO_MAP}}` | Q2+Q3 answers | Format each as a table row: `\| <repo> \| <purpose> \|` — one row per repo. Fallback if no repos: `No repos specified` |
+| `{{REPO_MAP}}` | Q2+Q3 answers | Format each as a table row: `\| <repo> \| <purpose> \|` — one row per repo. Fallback if no repos: `\| _none_ \| No repos specified \|` |
 | `{{STACK}}` | Q5 answer | Fallback: `Not specified` |
 | `{{CREATED_DATE}}` | Bash `date +%Y-%m-%d` | Fallback: use today's date as literal string if Bash fails |
 | `{{CONVENTIONS}}` | Derived: combine stack + goal into 1-2 practical rules | Fallback: `Follow standard conventions for the stack` |
@@ -235,7 +235,7 @@ When the user runs `/workspace-create my-apis`, the full flow looks like this:
 2. All 5 interview questions answered (name, repos, per-repo purpose, goal, stack — or blank/skip recorded for Q5).
 3. `{{WORKSPACE_NAME}}` and `{{WORKSPACE_GOAL}}` are non-empty (re-asked if needed).
 4. `{{STACK}}` has either a user-provided value or the fallback "Not specified".
-5. `{{REPO_MAP}}` has either formatted table rows or the fallback "No repos specified".
+5. `{{REPO_MAP}}` has either formatted table rows or the fallback `| _none_ | No repos specified |`.
 6. `{{CONVENTIONS}}` has either a derived value or the fallback "Follow standard conventions for the stack".
 7. Scaffold plan preview shown to user; user replied 'yes' or equivalent.
 8. Existing workspace check ran before mkdir; user confirmed if EXISTS.
