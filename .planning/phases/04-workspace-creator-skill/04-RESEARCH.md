@@ -65,12 +65,18 @@ skills/workspace-create/templates/
 
 The template file must be created as part of Phase 4. **Two design choices for the planner:**
 
-| Approach | Trade-off |
-|----------|-----------|
-| A) Template file: Create `skills/workspace-create/templates/CLAUDE.md.template` with `{{VARIABLE}}` markers; skill loads it via Read and replaces markers | Cleanest separation — template maintainable without reading SKILL.md; executor has clear second artifact to write |
-| B) Inline generation: Skill body carries full CLAUDE.md structure as a prose template embedded in instructions | Simpler runtime (no Read call needed); but mixing template content with instructions bloats SKILL.md |
+> **BLOCKING CONSTRAINT:** The stub frontmatter is `allowed-tools: [Write, Bash]`. Read is NOT listed.
+> Approach A requires the Read tool at runtime — which is not currently permitted without a frontmatter change.
+> The stub's own comment implies a Read call was the original design intent ("Load ... template").
+> See Critical Open Design Question Q2 and Assumptions Log A11 for the full decision tree.
 
-[ASSUMED — Approach A is recommended; either is valid. Planner decides.]
+| Approach | Tool Required | Frontmatter Change? | Trade-off |
+|----------|--------------|---------------------|-----------|
+| A) Template file via Read | Read (NOT in stub) | Must add Read to `allowed-tools` | Cleanest separation; two-task plan |
+| B) Inline generation | None beyond Write+Bash | No change needed | SKILL.md longer; self-contained |
+| C) Template file via Bash cat | Bash (already in stub) | No change needed | Avoids frontmatter change; awkward pattern |
+
+[ASSUMED — see Q2 in Critical Open Design Questions below. Planner decides which option and whether frontmatter changes.]
 
 ### Alternatives Considered
 
@@ -377,12 +383,21 @@ These questions have no CONTEXT.md to resolve them. They are `[ASSUMED]` and mus
 
 **Recommendation [ASSUMED]:** Option A. Stub comment says workspace name "becomes a directory name" — implies it's a new directory, not CWD itself. Interview Q1 should confirm or let user override.
 
-### Q2: Template file vs inline generation?
+### Q2: Template file vs inline generation? (BLOCKING — depends on allowed-tools decision)
 
-Option A (template file) keeps concerns separated; recommended. Requires two tasks in PLAN.md.
-Option B (inline) is simpler but bloats SKILL.md. Not recommended.
+The stub frontmatter `allowed-tools: [Write, Bash]` does NOT include Read.
 
-[ASSUMED — planner decides]
+| Option | Approach | Tools Needed | Frontmatter Deviation? |
+|--------|----------|-------------|----------------------|
+| A | Read template file via Read tool | Read + Write + Bash | YES — must amend `allowed-tools` |
+| B | Embed template inline in SKILL.md | Write + Bash only | No — frontmatter unchanged |
+| C | Read template file via `bash cat` | Bash + Write | No — frontmatter unchanged; awkward |
+
+**Recommendation [ASSUMED]:** Option A with frontmatter amendment. The stub's line 17 comment explicitly says "Load CLAUDE.md.template" — Read was always the design intent. Amending to `[Read, Write, Bash]` is a justified deviation from "stub frontmatter is final." Document it in the plan as Deviation D-01 for Phase 4.
+
+If the planner wants zero frontmatter changes: Option B is the clean fallback. Remove the template task from PLAN.md.
+
+[ASSUMED — planner decides which option; this choice gates the template task in PLAN.md]
 
 ### Q3: What happens if `.workspace/` already exists in CWD?
 
@@ -395,6 +410,19 @@ No behavior specified. Options: warn + stop, warn + continue, silently overwrite
 WORK-04 says create `.claude/` directory — no content specified. Adding `settings.local.json` is a useful UX improvement but is not required by WORK-04. Recommend: write it (useful, low cost). If the planner agrees, it's one extra Write call in the scaffold stage.
 
 [ASSUMED]
+
+### Q5: What should happen when `$ARGUMENTS` is non-empty?
+
+The stub has no `argument-hint` field — invocations will typically have empty `$ARGUMENTS`. However, a user might write `/workspace-create my-project-name` to skip Q1.
+
+| Option | Behavior |
+|--------|----------|
+| A) Treat as workspace-name seed | Pre-fill Q1 from `$ARGUMENTS`; confirm with user before proceeding |
+| B) Ignore | Start interview fresh regardless of argument |
+
+**Recommendation [ASSUMED]:** Option A. Pre-filling Q1 from `$ARGUMENTS` reduces friction. Skill body should read: "If `$ARGUMENTS` is non-empty, treat it as the proposed workspace name and confirm with the user before the interview begins."
+
+[ASSUMED — planner decides]
 
 ---
 
@@ -561,6 +589,9 @@ Phase 4 is a greenfield scaffolder — it creates new state, does not rename or 
 | A8 | `.vscode/` gets only `.gitkeep` (no content); user adds their own settings | Edge Cases | User may expect `settings.json` or `extensions.json` pre-populated; not required by WORK-04 |
 | A9 | CLAUDE.md template uses `{{DOUBLE_BRACE}}` marker syntax | CLAUDE.md Template Design | Any marker syntax works at runtime since Claude is doing string substitution; aesthetic only |
 | A10 | `date +%Y-%m-%d` works in git-bash on Windows to get current date | Code Examples | If Bash date command differs on Windows, fallback to asking Claude to insert today's date as text |
+| A11 | Amending stub `allowed-tools` to add Read is acceptable (justified by stub comment intent) | Critical Open Design Q2 | If frontmatter must stay unchanged, inline template (Option B) is the only valid path; this gates the entire template task |
+| A12 | Non-empty `$ARGUMENTS` should seed Q1 as workspace name pre-fill | Critical Open Design Q5 | If ignored, slight UX friction; low risk |
+| A13 | Stub comment constraint "All paths use forward slashes; do NOT hardcode user home paths" must be honored | Standard Stack, Code Examples | If violated, paths break on Windows due to backslash/forward-slash mismatch in Write tool |
 
 ---
 
