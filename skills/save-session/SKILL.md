@@ -1,7 +1,7 @@
 ---
 name: save-session
 description: "Use when the user wants to summarize the current session (what was done, decisions, pending items) and persist it as markdown to .workspace/sessions/[timestamp]-[topic].md, or asks to 'salvar sessão', 'salvar contexto', 'resumir a sessão', 'gerar resumo da sessão', 'pendências'. Redacts secrets before writing — never persists credentials, tokens, or keys to disk. Manual invocation only via /save-session [topic]."
-disable-model-invocation: true
+disable-model-invocation: false
 allowed-tools: [Write, Bash]
 argument-hint: "[topic]"
 model: haiku
