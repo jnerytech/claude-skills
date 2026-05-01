@@ -1,6 +1,6 @@
 ---
 name: improve-prompt
-description: "Rewrites a rough prompt for clarity, specificity, context richness, and structure. Scans the codebase (Glob/Grep) to fill in concrete file paths and symbols when the rough prompt only implies them. Outputs just the improved prompt — no Original / What Changed sections. Manual invocation only via /improve-prompt <rough-prompt>."
+description: "Use when the user wants to rewrite a rough prompt for clarity, specificity, context richness, and structure, or asks to 'melhorar prompt', 'refinar prompt', 'reescrever prompt', 'deixar mais claro'. Scans the codebase (Glob/Grep) to substitute concrete file paths and symbols when the rough prompt only implies them. Outputs only the improved prompt — no Original / What Changed sections. Manual invocation only via /improve-prompt [rough-prompt-text]."
 argument-hint: [rough-prompt-text]
 allowed-tools: [Read, Glob, Grep]
 disable-model-invocation: true
@@ -35,7 +35,7 @@ Skim the rough prompt for cues that imply concrete code references but don't nam
 | "the code", "this codebase", "the app" with no specifics | top-level entry points and config |
 | Verb-only ("fix it", "refactor", "update") with no target | abort scan — placeholder route only |
 
-If no cue is present, skip Stage 3 entirely and go to Stage 4.
+If no cue is present, skip Stage 3 entirely and go to Stage 4. Do NOT proceed to Stage 4 until cue detection has run on the full `$ARGUMENTS`.
 
 ## Stage 3 — Scan the codebase
 
@@ -70,7 +70,9 @@ Render the user's task in clearer words but never lose the user's intent.
 
 ## Stage 5 — Output
 
-Output **only** the improved prompt inside a single triple-backtick fenced code block. Do not emit `## Original`, `## What Changed`, or any other heading. Do not narrate what you scanned.
+Output **only** the improved prompt inside a single triple-backtick fenced code block. Do NOT emit `## Original`, `## What Changed`, or any other heading. Do NOT narrate what you scanned.
+
+**Output language MUST match the input language.** If `$ARGUMENTS` is in PT-BR, the rewritten prompt is in PT-BR. If EN, EN. NEVER translate the user's intent into a different language. Technical terms (file paths, commands, function names, env-var names, library names) stay untranslated regardless of the surrounding prose language.
 
 Example output:
 
@@ -123,10 +125,20 @@ User runs `/improve-prompt coferir se o codigo usa dados de banco e url host no 
 Audit @file src/db/client.ts and @file config/database.yml to verify that database credentials and host URLs are not hardcoded in the application code. Confirm each connection value reads from `process.env.*` (or the documented secrets manager) — flag any string literal that bypasses the env layer. Document each violation with file:line and the remediation path.
 ```
 
+## Critical Rules
+
+- Output MUST be exactly one fenced code block. NEVER emit headings like `## Original` or `## What Changed`.
+- Stage 3 MUST run ≤4 Glob/Grep operations total. NEVER load whole files unless a hit needs disambiguation.
+- Output language MUST match input language. NEVER translate the user's intent.
+- Technical terms (paths, commands, env vars, function names) MUST stay untranslated.
+- NEVER write files. NEVER run Bash. Tools are `Read, Glob, Grep` only.
+- Do NOT narrate scans. Do NOT explain what changed. The fenced block is the entire deliverable.
+
 ## Final checks before responding
 
 1. Output is exactly one fenced code block containing only the rewritten prompt — no Original section, no What Changed bullets.
 2. Stage 3 ran ≤4 Glob/Grep operations total when cues were present.
 3. Resolved paths from Stage 3 appear inline in the rewrite (as `@file <path>` or directly named) — no stray `[target file]` placeholders left over a successful scan.
 4. The sharpen note appears only when placeholders remain unresolved.
-5. No file was written; no Bash command was run.
+5. Output language matches input language (PT-BR in → PT-BR out; EN in → EN out).
+6. No file was written; no Bash command was run.

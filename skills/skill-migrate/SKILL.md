@@ -1,6 +1,6 @@
 ---
 name: skill-migrate
-description: "Migrates a skill, command, prompt, or rule from another AI provider (Cursor, Cline, Continue, Aider, Copilot, OpenAI GPT export, generic prompt) into a Claude Code skill: detects the source format, maps semantics into Claude's frontmatter + body, previews the result, and writes to ~/.claude/skills/<name>/SKILL.md after the user confirms. Manual invocation only via /skill-migrate <path-or-url>."
+description: "Use when the user wants to migrate a skill, command, prompt, or rule from another AI provider (Cursor, Cline, Continue, Aider, Copilot, OpenAI GPT export, generic prompt) into a Claude Code skill, or asks to 'migrar skill', 'importar skill', 'converter prompt', 'trazer regra do cursor'. Detects the source format, maps semantics into Claude's frontmatter + body, previews the result, and writes the new SKILL.md after the user confirms. Manual invocation only via /skill-migrate [path-or-url]."
 argument-hint: [path-or-url]
 allowed-tools: [Read, Write, Bash, WebFetch, Glob]
 disable-model-invocation: true
@@ -26,13 +26,14 @@ Otherwise proceed to Stage 2.
 
 ## Stage 2 — Read the spec
 
-Before any inference or write, **always** read:
+Before any inference or write, **always** read BOTH:
 
 ```
 ${CLAUDE_SKILL_DIR}/references/extend-claude-with-skills.md
+${CLAUDE_SKILL_DIR}/../skill-create/references/multilingual-skill-rules.md
 ```
 
-Mandatory step. Every Claude Code frontmatter field, default, and limit referenced below comes from this doc. Treat it as the authoritative source — if a mapping decision in later stages conflicts with this doc, the doc wins.
+Mandatory step. The first doc is authoritative for every Claude Code frontmatter field, default, and limit. The second governs **language strategy** — the generated frontmatter MUST be EN-only with quoted PT-BR triggers, even when the foreign source is PT-BR. Fallback path for the multilingual rules: `D:/repos/claude-skills/skills/skill-create/references/multilingual-skill-rules.md`. Do NOT proceed to Stage 5 until both are read (multilingual treated N/A only if both candidate paths fail).
 
 The `references/` folder contains three additional docs. Load each only when its trigger fires (see Stage 4.5 — *Conditional reference reads*). Never skip a triggered reference; it carries the rules for the matching capability and the migration must respect them.
 
@@ -111,9 +112,16 @@ Validate against `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤64 chars. Slugify if needed.
 
 Append manual-invocation phrasing: `Manual invocation only via /<name> [args].` (omit `[args]` if the source has no obvious argument).
 
+**Description language (per `multilingual-skill-rules.md`):**
+- Frontmatter MUST be English. Open the description with `Use when` or `Used to` (third person, present tense).
+- If the foreign source is in PT-BR, **translate** the meaning into the EN description AND include 1-3 quoted PT-BR phrases as discovery triggers (e.g. `... or asks to "<pt-br trigger>"`). Mine the foreign body for natural PT-BR phrases that a user would say to invoke this skill.
+- NEVER copy a bare PT-BR description into the frontmatter. Quoted PT-BR triggers are the only PT-BR allowed in the EN frontmatter.
+
 ### Body
 
 Use the foreign content as the skill body **verbatim** when it is prose. Strip foreign-specific frontmatter (Cursor `.mdc` YAML, Continue JSON wrapper) so only the instructional content remains. Preserve fenced code blocks unchanged. Do not paraphrase user instructions — migration must keep intent intact.
+
+**Body language exception:** the verbatim-preservation rule overrides multilingual rule §2 (which would otherwise require EN imperatives in restrictions). The body stays in the source's original language. **Compensating control:** Stage 6 wraps the verbatim body with EN scaffolding (`## When to act` guard, `## Source` line, optional `## Critical Rules` block) and the inference summary at Stage 7 flags PT-BR bodies so the user can opt into a separate `/skill-improve` pass to apply the language fixes.
 
 For OpenAI GPT export: use the `instructions` string as the body. List `tools` (web, code_interpreter, file_search) and `knowledge_files` under a `## Notes from source` section so the user knows what could not auto-map.
 
@@ -164,12 +172,13 @@ disable-model-invocation: true # omit only on documented override
 ```
 
 Body sections, in order:
-- `## When to act` — empty-input guard if `argument-hint` is set; otherwise omit
-- `## Source` — one line: `Migrated from <format> at <original path or URL>.`
-- The mapped body content (verbatim foreign instructional text)
-- `## Notes from source` — only if foreign features could not map (GPT tools, Aider flags, Continue model bindings)
+- `## When to act` — empty-input guard if `argument-hint` is set; otherwise omit. ALWAYS English regardless of foreign body language.
+- `## Source` — one line in English: `Migrated from <format> at <original path or URL>.`
+- The mapped body content (verbatim foreign instructional text — preserve original language)
+- `## Notes from source` — only if foreign features could not map (GPT tools, Aider flags, Continue model bindings). English.
+- `## Critical Rules` (English, optional) — add only when the foreign source has clear hard constraints worth surfacing (e.g. `alwaysApply: true` Cursor rules, "MUST NEVER X" rules in OpenAI exports). Translate the constraints into EN imperatives (`MUST`, `NEVER`, `Do NOT`).
 
-Ground every Claude Code frontmatter field name and capability in what was read from `extend-claude-with-skills.md` in Stage 2.
+Ground every Claude Code frontmatter field name and capability in what was read from `extend-claude-with-skills.md` in Stage 2. Ground every language choice in `multilingual-skill-rules.md`.
 
 ## Stage 7 — Preview and confirm
 
@@ -214,6 +223,8 @@ Below the preview, output a one-line inference summary and a confirm prompt in c
 > **Migrated from:** `<format>` · **name** `<name>` · **tools** `<tools or "none">` · **trigger** `<user-only or auto>` · **aux files** `<count or "none">` · **refs consulted:** `<comma-separated reference filenames, or "spec only">`
 >
 > **Source class:** `<repo|external>` · **Destination:** `<absolute target path>`
+>
+> **Body language:** `<EN | PT-BR | mixed>` · if PT-BR or mixed, run `/skill-improve <name>` afterward to apply language fixes (EN imperatives, EN dependency locks, untranslated technical terms) per `multilingual-skill-rules.md`.
 >
 > Reply 'yes' to write, or describe changes (e.g. "rename to foo-bar", "add Bash to tools", "make it auto-invocable", "drop the Notes section", "write to user-global instead").
 
@@ -299,18 +310,29 @@ User runs `/skill-migrate ./my-export.json`.
   - trigger: user-only (default)
 - Continue normally through Stages 6–9.
 
+## Critical Rules
+
+- BOTH spec docs MUST be read in Stage 2 before any mapping. Do NOT mix order: spec first, then trigger-conditional refs, then mapping.
+- Body content MUST be preserved verbatim from the source. NEVER paraphrase, translate, or "improve" the foreign instructional text — migration is fidelity-first.
+- Frontmatter MUST be English-only. NEVER copy a bare PT-BR description into the YAML. Quoted PT-BR triggers are the ONLY PT-BR allowed in frontmatter.
+- Source class `repo` MUST write under `<repo-root>/.claude/skills/<name>/`. NEVER silently escalate to user-global. Override requires explicit user instruction in Stage 7.
+- `$USERPROFILE` MUST be used on the user-global branch. NEVER use `~` (Issue #30553).
+- The validate → mkdir → Write order in Stage 8 MUST NOT be reordered.
+- If the body is PT-BR or mixed, the inference summary MUST flag it and recommend `/skill-improve <name>` as the follow-up.
+
 ## Final checks before writing
 
 Before executing the write step (Stage 8), confirm:
 
-1. Spec (`extend-claude-with-skills.md`) was read in Stage 2 before any mapping.
+1. BOTH `extend-claude-with-skills.md` AND `multilingual-skill-rules.md` were read in Stage 2 before any mapping (multilingual marked N/A only if both candidate paths failed).
 2. Source format was detected (Stage 4) and stated in the inference summary.
 3. Conditional refs (Stage 4.5) were loaded for every fired trigger and listed in the inference summary.
 4. Name was inferred and validated (`^[a-z0-9]+(-[a-z0-9]+)*$`, no `/`, `..`, or `\`).
 5. Body content was preserved verbatim from the source; foreign frontmatter stripped, prose unchanged.
 6. Generated SKILL.md was shown in a 4-backtick fenced preview before writing.
-7. Inference summary listed source format, name, tools, trigger, aux file count, refs consulted, source class, and resolved destination path.
-8. **Source class `repo` writes go under `<repo-root>/.claude/skills/<name>/`, not `$USERPROFILE`** — only escalate to user-global on explicit user override or `external` source class.
-9. User confirmed with "yes" or equivalent in chat.
-10. `mkdir -p` ran before the Write call.
-11. `$USERPROFILE` was used only on the user-global branch — never on the repo branch — and `~` was not used at all (Windows expansion bug).
+7. Frontmatter is EN-only with `Use when` opener; PT-BR appears only inside double-quoted triggers.
+8. Inference summary listed source format, name, tools, trigger, aux file count, refs consulted, source class, resolved destination path, AND body language with the `/skill-improve` follow-up note when PT-BR/mixed.
+9. **Source class `repo` writes go under `<repo-root>/.claude/skills/<name>/`, not `$USERPROFILE`** — only escalate to user-global on explicit user override or `external` source class.
+10. User confirmed with "yes" or equivalent in chat.
+11. `mkdir -p` ran before the Write call.
+12. `$USERPROFILE` was used only on the user-global branch — never on the repo branch — and `~` was not used at all (Windows expansion bug).

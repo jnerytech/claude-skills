@@ -1,6 +1,6 @@
 ---
 name: skill-improve
-description: "Audits an existing Claude Code skill against the best-practice rules in the bundled reference docs (extend-claude-with-skills, automate-workflows-with-hooks, create-custom-subagents, run-claude-code-programmatically), proposes a corrected SKILL.md with frontmatter, body, tools, trigger, and supporting-file fixes, previews the changes, and rewrites the file after the user confirms. Manual invocation only via /skill-improve <path-or-skill-name>."
+description: "Use when the user wants to audit and rewrite an existing Claude Code skill against bundled reference docs (extend-claude-with-skills, automate-workflows-with-hooks, create-custom-subagents, run-claude-code-programmatically) and the project's multilingual authoring rules, or asks to 'melhorar skill', 'corrigir skill', 'consertar skill', 'aplicar fixes na skill'. Proposes a corrected SKILL.md, previews the changes, and rewrites the file after the user confirms. Manual invocation only via /skill-improve [path-or-skill-name]."
 argument-hint: [path-or-skill-name]
 allowed-tools: [Read, Write, Bash, Glob]
 disable-model-invocation: true
@@ -32,8 +32,9 @@ This skill's job is to apply *all* of the bundled references. Read them in this 
 2. `${CLAUDE_SKILL_DIR}/references/automate-workflows-with-hooks.md` — hook-related fields (`hooks:`), event triggers, ordering rules.
 3. `${CLAUDE_SKILL_DIR}/references/create-custom-subagents.md` — `agent:` field, `context: fork`, isolated execution rules.
 4. `${CLAUDE_SKILL_DIR}/references/run-claude-code-programmatically.md` — headless / CI considerations, non-interactive invocation.
+5. `${CLAUDE_SKILL_DIR}/../skill-create/references/multilingual-skill-rules.md` — language strategy: EN frontmatter, hybrid body, EN imperatives, step-locks, untranslated technical terms. Fallback path: `D:/repos/claude-skills/skills/skill-create/references/multilingual-skill-rules.md`.
 
-All four are mandatory. Do not short-circuit. The audit checklist in Stage 5 cites rules from each — you cannot apply a rule you have not read.
+All five are mandatory. Do NOT short-circuit. The audit checklist in Stage 5 cites rules from each — you CANNOT apply a rule you have not read. Do NOT proceed to Stage 5 until every doc above has been read.
 
 ## Stage 3 — Resolve the target skill
 
@@ -92,6 +93,17 @@ Run every check below. For each, mark **PASS**, **FIX**, or **N/A**, and record 
 
 20. If the skill is intended for CI/headless use, it tolerates missing `$ARGUMENTS` interactively (skipping `AskUserQuestion`) or documents that limitation.
 21. Skills invoked via the SDK or `--print` mode avoid `AskUserQuestion`-style prompts in the critical path; if used, they have a documented fallback.
+
+### From `multilingual-skill-rules.md`
+
+22. **Frontmatter EN-only** — `name`, `description`, `argument-hint` contain no PT-BR words *outside double-quoted triggers*. Quoted PT-BR phrases are encouraged. FIX bare PT-BR words in EN prose (e.g. `description: "Resume a sessão..."`).
+23. **Description opener** — starts with `Use when` or `Used to` (third-person, present tense). FIX bare verb openers like `Summarizes`/`Audits`/`Generates`.
+24. **No `<` / `>` in frontmatter values** — angle brackets in YAML can inject unintended instructions. FIX by switching to square brackets or quoted strings.
+25. **EN imperatives in restrictions** — body uses `MUST`, `NEVER`, `IMPORTANT`, `Do NOT` for control language. FIX `DEVE`/`NUNCA`/`OBRIGATÓRIO` used as control imperatives (PT-BR descriptive prose around them is fine).
+26. **`## Critical Rules` block in English** — when the skill has restrictions, they live in a `## Critical Rules` (or equivalent) section in English. FIX by adding the section if restrictions are scattered as PT-BR prose.
+27. **Numbered steps with EN dependency locks** — multi-step bodies use numbered lists with English locks (`Do NOT proceed to step N until ...`). FIX fluid PT-BR prose by numbering and inserting locks (Step Skipping mitigation).
+28. **Technical terms untranslated** — commands, flags, env-var names, MCP tool names, API enums stay untranslated regardless of surrounding prose. FIX any translated command (e.g. `executar reinício` → restore original `git reset` etc.).
+29. **PT-BR triggers in description** — if the skill is plausibly invoked in PT-BR (project context, PT-BR worked examples in body, PT-BR section names), the EN `description` includes one or more PT-BR trigger phrases between double quotes. FIX by appending `or asks to "<pt-br trigger>"` to the description.
 
 For each FIX, write a one-line diagnosis: what is wrong, which rule it violates, what the fix is.
 
@@ -159,6 +171,16 @@ Trigger when:
 
 Output as: `Argument: <new shape>. Why: <one sentence>. Source: extend-claude-with-skills.md.`
 
+### Lens 7 — Language strategy (`multilingual-skill-rules.md`)
+
+Trigger when:
+- Description is EN but skill is plausibly used in PT-BR (project is PT-BR, body has PT-BR worked examples, PT-BR section names) → propose adding 2-4 quoted PT-BR triggers to description.
+- Body has `## Common Gotchas` / restrictions scattered as prose → propose consolidating into a `## Critical Rules` section in English.
+- Multi-step body uses fluid prose without explicit step locks → propose numbering + adding `Do NOT proceed to step N until ...` locks (Step Skipping mitigation).
+- Skill calls an MCP/API with strict enums and there is no enum-fetch step → propose the 3-step Enum Guessing mitigation: fetch valid enums → map PT-BR input → call action.
+
+Output as: `Language: <change>. Why: <one sentence>. Source: multilingual-skill-rules.md §<N>.`
+
 ### Suggestion budget
 
 Cap total suggestions at **5** for the whole skill. Pick the highest-leverage ones — do not pad. Better to surface three good ideas than ten weak ones. If nothing rises above the bar, output `No upgrade suggestions — the skill is already fit for purpose.` and move on.
@@ -171,12 +193,13 @@ Apply every FIX from Stage 5 unconditionally. **Mark every Stage 5.5 suggestion 
 
 Specifically for the FIXes:
 
-- Rewrite the description only when it fails check 2 or 3.
+- Rewrite the description only when it fails check 2, 3, 22, 23, or 29.
 - Trim or extend `allowed-tools` based on actual body usage (check 5).
 - Add the empty-input guard if missing (check 7).
 - Restructure into stages only when the body is procedurally tangled and reads as a wall of prose.
 - Add a `## Final checks` section if the skill writes files and lacks one.
 - If body length exceeds ~150 lines AND check 12 fires, propose moving specific sections to `references/<topic>.md`. List the proposed file names and contents in the preview; do not split silently.
+- **Language fixes (checks 22-29)**: rewrite frontmatter to EN-only with quoted PT-BR triggers; replace bare PT-BR control imperatives with `MUST`/`NEVER`/`Do NOT`; add `Use when` opener; consolidate scattered restrictions into a `## Critical Rules` section in English; insert `Do NOT proceed to step N until ...` locks where multi-step prose lacks them; restore any translated technical terms to their canonical EN form.
 
 Keep all original frontmatter keys the user set, even unknown ones, unless a rule explicitly requires removal.
 
@@ -203,7 +226,7 @@ name: …
 
 Below the preview, output the audit summary as a checklist:
 
-> **Audited against:** extend-claude-with-skills · automate-workflows-with-hooks · create-custom-subagents · run-claude-code-programmatically
+> **Audited against:** extend-claude-with-skills · automate-workflows-with-hooks · create-custom-subagents · run-claude-code-programmatically · multilingual-skill-rules
 >
 > **Findings (applied):**
 > - ✓ <PASSed check #N>: <short note>
@@ -277,13 +300,22 @@ User runs `/skill-improve ./skills/api-style`.
 - **Stage 8:** backup, write.
 - **Stage 9:** report: "3 issues fixed · 2 suggestions applied (hook, headless) · 1 deferred."
 
+## Critical Rules
+
+- MUST read all five reference docs in Stage 2 before any audit decision (or mark multilingual N/A only if both candidate paths fail).
+- NEVER bake Stage 5.5 suggestions into the file silently — every suggestion is opt-in and requires user confirmation in Stage 7.
+- MUST create the `.bak` backup before the Write call. NEVER reorder Stage 8 (validate → backup → write).
+- Use `$USERPROFILE`, NEVER `~`, on Windows-rooted writes (Issue #30553).
+- The improved SKILL.md MUST satisfy checks 22-29 — EN frontmatter, EN imperatives, EN dependency locks, untranslated technical terms — even if the original violated them.
+- NEVER rename the parent directory without explicit user confirmation when the `name` field changed.
+
 ## Final checks before writing
 
 Before executing Stage 8, confirm:
 
-1. All four references in `${CLAUDE_SKILL_DIR}/references/` were read in Stage 2.
+1. All FIVE references were read in Stage 2 (the four bundled refs + `multilingual-skill-rules.md`); multilingual checks marked N/A only if both candidate paths failed.
 2. Resolved path is absolute and points to an existing `SKILL.md`.
-3. Every audit check was marked PASS / FIX / N/A with a rule citation.
+3. Every audit check (1-29) was marked PASS / FIX / N/A with a rule citation.
 4. Stage 5.5 suggestions (or `No upgrade suggestions`) were produced and shown to the user.
 5. Each accepted suggestion is reflected in the regenerated preview before writing.
 6. Improved SKILL.md was shown in a 4-backtick fenced preview after the final round of changes.
@@ -292,3 +324,4 @@ Before executing Stage 8, confirm:
 9. `.bak` copy was created before the Write call.
 10. `$USERPROFILE` was used for any Windows-rooted write — not `~`.
 11. If the `name` was renamed, the parent directory rename was confirmed by the user.
+12. Generated SKILL.md frontmatter is EN-only (PT-BR only inside double-quoted triggers); body imperatives are EN (`MUST`/`NEVER`/`Do NOT`); multi-step flows have explicit EN dependency locks.

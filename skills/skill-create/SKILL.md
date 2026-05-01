@@ -24,21 +24,40 @@ Otherwise proceed to Stage 2.
 
 ## Stage 2 — Read the spec
 
-Before any inference, read:
+Before any inference, read BOTH:
 
 ```
 ${CLAUDE_SKILL_DIR}/references/extend-claude-with-skills.md
+${CLAUDE_SKILL_DIR}/references/multilingual-skill-rules.md
 ```
 
-Mandatory step. Every frontmatter field, default, and limit referenced below comes from this doc.
+Mandatory step. The first doc defines every frontmatter field, default, and limit. The second defines the **language strategy** (EN frontmatter, hybrid body, EN imperatives) that all generated skills MUST follow — even when the user's description is in PT-BR.
 
 ## Stage 3 — Infer settings from the description
 
 Derive all of the following from `$ARGUMENTS` without asking the user. The user overrides any of these in the confirm step (Stage 5) by describing changes in chat.
 
+### Language strategy (MANDATORY — applies even if `$ARGUMENTS` is in PT-BR)
+
+The generated SKILL.md MUST follow the rules in `multilingual-skill-rules.md`. Concretely:
+
+- **Frontmatter (`name`, `description`, `argument-hint`): English only.** No accents, no PT-BR words outside quoted triggers. `description` starts with `Use when...` or `Used to...` in third person.
+- **PT-BR triggers go inside the English `description` between double quotes** when the user description is in PT-BR or names PT-BR concepts. Example: `Use when the user asks to "refatorar camada de dados" or mentions "padrão repository".` This preserves Level-1 routing while capturing PT-BR queries.
+- **Body language: PT-BR is acceptable when `$ARGUMENTS` is in PT-BR**, with four mandatory English islands:
+  1. `## Critical Rules` / negative restrictions → English (`Do NOT use for X`, never `Não use para X`).
+  2. Imperatives → English (`MUST`, `NEVER`, `IMPORTANT`, `YOU MUST`) — never `DEVE`/`NUNCA`/`OBRIGATÓRIO`.
+  3. Technical terms (commands, APIs, flags, enums, MCP names, hook names) → English/canonical, untranslated.
+  4. Step-dependency locks → English (`Do NOT proceed to step N until step N-1 returns results`).
+- **Numbered, dependency-locked steps over fluid prose.** Anti-Step-Skipping: every multi-step body must use numbered steps with explicit English locks, not flowing PT-BR prose.
+- **Enum Guessing mitigation.** If the skill calls an MCP/API expecting strict enum values, generate a step-1 = `fetch valid enum list`, step-2 = `map PT-BR input → EN enum`, step-3 = `call action`. Never let the model guess enum values from PT-BR input.
+- **Avoid `<` and `>` characters in frontmatter values** — they can inject unintended instructions. Use square brackets in `argument-hint`.
+- **Length budget:** body ≤500 lines (the PT-BR token tax makes this stricter than EN).
+
+If `$ARGUMENTS` is fully in English, the body defaults to English too — these rules just collapse to "everything English".
+
 ### Name
 
-Kebab-case, matches `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤64 chars. Derive from the verb-object pair in the description (e.g. "summarizes git logs" → `git-log-summary`).
+Kebab-case, matches `^[a-z0-9]+(-[a-z0-9]+)*$`, ≤64 chars. Derive from the verb-object pair in the description (e.g. "summarizes git logs" → `git-log-summary`). If `$ARGUMENTS` is in PT-BR, translate the verb-object to English before kebab-casing (e.g. "resumo de logs do git" → `git-log-summary`, NOT `resumo-logs-git`).
 
 ### Trigger
 
@@ -83,25 +102,32 @@ If none apply, proceed with only the core spec already read.
 
 ## Stage 4 — Generate SKILL.md
 
-Build the full SKILL.md in memory from the inferred settings. Frontmatter template:
+Build the full SKILL.md in memory from the inferred settings. Frontmatter template (always English, third-person):
 
 ```yaml
 ---
 name: <inferred name>
-description: "<one-sentence what + manual-invocation phrasing>"
+description: "Use when <trigger>. <One-sentence what>. Manual invocation only via /<name>[ <arg>]."
 argument-hint: [<hint>] # omit if no $ARGUMENTS use
 allowed-tools: [<inferred tools>] # omit if chat-only
 disable-model-invocation: true # omit only on documented override
 ---
 ```
 
+Description rules (from `multilingual-skill-rules.md` §1):
+- Third person, present tense, English.
+- Start with `Use when...` or `Used to...`.
+- If the source description is PT-BR or names PT-BR concepts, embed PT-BR triggers as quoted phrases inside the English sentence: `... or mentions "padrão repository"`.
+- No `<` / `>` characters inside values.
+
 Body sections, in order:
 - `## When to act` — empty-input guard
-- `## How to <verb>` — numbered steps derived directly from the description
+- `## How to <verb>` — **numbered** steps with explicit English dependency locks (`Do NOT proceed to step N until ...`); PT-BR allowed for descriptive prose only when source is PT-BR
+- `## Critical Rules` (English) — restrictions and `Do NOT` items (only if the skill has any)
 - One worked example (use a 4-backtick outer fence if the body contains triple-backtick fences)
-- `## Final checks before responding` — short numbered checklist
+- `## Final checks before responding` — short numbered checklist (English imperatives: `MUST`, `NEVER`)
 
-Ground every frontmatter field name and capability description in what was read from `extend-claude-with-skills.md` in Stage 2.
+Ground every frontmatter field name and capability description in what was read from `extend-claude-with-skills.md`. Ground every language choice in `multilingual-skill-rules.md` (both read in Stage 2).
 
 ## Stage 5 — Preview and confirm
 
@@ -209,10 +235,15 @@ User runs `/skill-create a skill that summarizes recent git log output as a bull
 
 Before executing the write step (Stage 6), confirm:
 
-1. Spec (`extend-claude-with-skills.md`) was read in Stage 2 before any inference.
-2. Name was inferred and validated (`^[a-z0-9]+(-[a-z0-9]+)*$`, no `/`, `..`, or `\`).
-3. Generated SKILL.md was shown in a 4-backtick fenced preview before writing.
-4. Inference summary line listed name, tools, and trigger so the user could spot mismatches.
-5. User confirmed with "yes" or equivalent in chat.
-6. `mkdir -p` ran before the Write call.
-7. `$USERPROFILE` was used — not `~`.
+1. BOTH refs were read in Stage 2: `extend-claude-with-skills.md` AND `multilingual-skill-rules.md`.
+2. Name was inferred and validated (`^[a-z0-9]+(-[a-z0-9]+)*$`, no `/`, `..`, or `\`, English root even if source was PT-BR).
+3. **Frontmatter is 100% English**, third-person, starts with `Use when` / `Used to`. PT-BR appears only as quoted triggers inside the English `description`.
+4. **Body imperatives are English** (`MUST`, `NEVER`, `IMPORTANT`, `Do NOT`) — no `DEVE`/`NUNCA`/`OBRIGATÓRIO`.
+5. **Multi-step flows are numbered** with explicit English dependency locks; no fluid PT-BR prose for control flow.
+6. Technical terms (commands, flags, APIs, MCP names, enums) are untranslated.
+7. Generated SKILL.md was shown in a 4-backtick fenced preview before writing.
+8. Inference summary line listed name, tools, and trigger so the user could spot mismatches.
+9. User confirmed with "yes" or equivalent in chat.
+10. `mkdir -p` ran before the Write call.
+11. `$USERPROFILE` was used — not `~`.
+12. Body ≤500 lines.

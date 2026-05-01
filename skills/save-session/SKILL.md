@@ -1,6 +1,6 @@
 ---
 name: save-session
-description: "Summarizes the current session (what was done, decisions, pendências) and writes a markdown file to .workspace/sessions/<timestamp>-<topic>.md. Redacts secrets before writing — never persists credentials, tokens, or keys to disk. Manual invocation only via /save-session [topic]."
+description: "Use when the user wants to summarize the current session (what was done, decisions, pending items) and persist it as markdown to .workspace/sessions/[timestamp]-[topic].md, or asks to 'salvar sessão', 'salvar contexto', 'resumir a sessão', 'gerar resumo da sessão', 'pendências'. Redacts secrets before writing — never persists credentials, tokens, or keys to disk. Manual invocation only via /save-session [topic]."
 disable-model-invocation: true
 allowed-tools: [Write, Bash]
 argument-hint: "[topic]"
@@ -28,7 +28,7 @@ model: haiku
    ```
    where `<timestamp>` is the value from the Context block above (format: `YYYY-MM-DD-HH-MM`).
 
-4. **Redact secrets before writing.** The session file lands on disk and may be committed, shared, or synced. Never persist real credentials.
+4. **Redact secrets before writing.** The session file lands on disk and may be committed, shared, or synced. NEVER persist real credentials. Do NOT proceed to step 5 (Write) until every bullet has been scanned and any matched value replaced with a `<REDACTED:kind>` placeholder.
 
    Scrub every bullet before it goes into the file. For each of these patterns, replace the actual value with a `<REDACTED:kind>` placeholder while keeping the surrounding context (file path, variable name, kind of secret):
 
@@ -80,4 +80,21 @@ Keep each bullet tight. No filler. Decisions must include the "why" when non-obv
    grep -nE '(AKIA|ASIA)[0-9A-Z]{16}|glpat-[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|squ_[A-Za-z0-9]+|xox[abprs]-[A-Za-z0-9-]+|-----BEGIN[^-]+PRIVATE KEY-----' .workspace/sessions/<timestamp>-<topic>.md || echo "CLEAN"
    ```
 
-   If output is anything other than `CLEAN`, delete the file via `rm` and report the leak to the user — do not leave a partially-redacted file on disk.
+   Do NOT report success until grep prints exactly `CLEAN`. If output is anything other than `CLEAN`, delete the file via `rm` and report the leak to the user — NEVER leave a partially-redacted file on disk.
+
+## Critical Rules
+
+- NEVER write the file before step 4 redaction has run on every bullet.
+- NEVER report success before step 6 grep prints `CLEAN`.
+- If a value cannot be classified safely, MUST refuse and ask the user — do not guess.
+- MUST use `mkdir -p` before any Write call. Write tool does NOT create parent dirs.
+- Tool boundary: only `Write` and `Bash` are allowed. NEVER use Read or Grep on user files unrelated to the session log.
+- Body section names (`O que foi feito`, `Decisões`, `Pendências`) MUST stay PT-BR — they are the persistent template, not control flow.
+
+## Final checks before reporting success
+
+1. `mkdir -p .workspace/sessions` ran before the Write call.
+2. Every bullet was scanned for the secret patterns table; matches replaced with `<REDACTED:kind>` placeholders.
+3. File written to `.workspace/sessions/<timestamp>-<topic>.md` with the three-section template.
+4. Post-write `grep` printed `CLEAN`.
+5. If the grep flagged residue, the file was deleted via `rm` and the leak was reported — NO partial file left on disk.

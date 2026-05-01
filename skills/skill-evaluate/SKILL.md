@@ -1,6 +1,6 @@
 ---
 name: skill-evaluate
-description: "Audits an existing SKILL.md against the Claude Code skills spec and project conventions, producing a PASS/WARN/FAIL report with line references and suggested fixes. Manual invocation only via /skill-evaluate <skill-name-or-path>."
+description: "Use when the user wants to audit an existing SKILL.md against the Claude Code skills spec, multilingual authoring rules, and project conventions, or asks to 'avaliar skill', 'auditar skill', 'verificar skill', 'revisar skill'. Produces a PASS/WARN/FAIL report with line references and suggested fixes. Manual invocation only via /skill-evaluate [skill-name-or-path]."
 argument-hint: [skill-name-or-path]
 allowed-tools: [Read, Glob, Grep, Bash]
 disable-model-invocation: true
@@ -22,15 +22,18 @@ Then stop — do not search, do not guess a target.
 
 Otherwise proceed to Stage 2.
 
-## Stage 2 — Read the spec
+## Stage 2 — Read the specs
 
-Before scoring anything, read the platform spec:
+Before scoring anything, read BOTH:
 
 ```
 ${CLAUDE_SKILL_DIR}/references/extend-claude-with-skills.md
+${CLAUDE_SKILL_DIR}/../skill-create/references/multilingual-skill-rules.md
 ```
 
-This is mandatory — every check below refers to a field, limit, or behavior defined there. Do not skip.
+Mandatory — every check below refers to a field, limit, or rule defined in one of these. Do NOT skip. Do NOT proceed to Stage 6 until both are read.
+
+If the multilingual rules file cannot be located at the path above, fall back to: `D:/repos/claude-skills/skills/skill-create/references/multilingual-skill-rules.md`. Skip multilingual checks (mark them N/A) only if neither path resolves.
 
 ## Stage 3 — Resolve the target
 
@@ -102,6 +105,18 @@ Score every check below as **PASS**, **WARN**, or **FAIL**. Cite the SKILL.md li
 
 15. **AskUserQuestion option budget** — every `AskUserQuestion` call uses ≤3 explicit options (the platform appends "Other"; total ≤4). FAIL per call exceeding the limit.
 
+### Language strategy (per `multilingual-skill-rules.md`)
+
+Mark **N/A** for any check whose target subsection does not exist (e.g. no `## Critical Rules` to audit).
+
+16. **Frontmatter is English-only** — `name`, `description`, `argument-hint` contain no PT-BR words *outside double-quoted triggers*. PT-BR phrases inside `"..."` are fine and encouraged. FAIL on bare PT-BR words in EN frontmatter prose (e.g. `description: "Resume a sessão..."`).
+17. **Description opener** — `description` starts with `Use when` or `Used to` (third-person, present tense). WARN if it opens with a bare verb like `Summarizes`/`Audits`.
+18. **No `<` / `>` in frontmatter values** — angle brackets in YAML values can inject unintended instructions; spec recommends square brackets in `argument-hint`. WARN per occurrence.
+19. **EN imperatives in restrictions** — body imperatives use `MUST`, `NEVER`, `IMPORTANT`, `Do NOT`. WARN per `DEVE`/`NUNCA`/`OBRIGATÓRIO` used as control language (PT-BR descriptive prose around them is fine).
+20. **`## Critical Rules` section in English** — if present, restrictions in `## Critical Rules` / `## Common Gotchas` use English imperatives. WARN per PT-BR restriction.
+21. **Numbered steps with EN dependency locks** — multi-step bodies use numbered lists with English locks like `Do NOT proceed to step N until ...`. WARN if multi-step flow is fluid PT-BR prose without locks (Step Skipping risk).
+22. **Technical terms untranslated** — commands, flags, env-var names, MCP tool names, API enums appear untranslated regardless of surrounding prose language. FAIL per translated command (e.g. `executar reinício` instead of `git restart`).
+
 ## Stage 7 — Output the report
 
 Use this exact structure. Keep it scannable — one line per check.
@@ -126,8 +141,15 @@ Use this exact structure. Keep it scannable — one line per check.
 ## Hygiene
 - ✅ AskUserQuestion options — PASS
 
+## Language strategy
+- ✅ Frontmatter EN-only — PASS
+- ⚠️ Description opener — WARN (line 3): starts with `Summarizes` instead of `Use when`
+- ✅ EN imperatives — PASS
+- ⚠️ Step locks — WARN: Stage 3 → Stage 4 transition lacks `Do NOT proceed until ...` lock
+- ✅ Technical terms untranslated — PASS
+
 ## Summary
-- **2 FAIL, 2 WARN, 5 PASS, 1 N/A**
+- **2 FAIL, 4 WARN, 7 PASS, 1 N/A**
 
 ## Suggested fixes
 1. Line 5 — add `disable-model-invocation: true` to frontmatter; this skill writes files.
@@ -140,7 +162,15 @@ If the target has zero FAILs and zero WARNs, end with `**Verdict:** Ready to shi
 
 ## Stage 8 — Do not modify the target
 
-This skill is read-only. Never edit the evaluated SKILL.md or any sibling file. The user takes the report and decides what to change.
+This skill is read-only. NEVER edit the evaluated SKILL.md or any sibling file. The user takes the report and decides what to change.
+
+## Critical Rules
+
+- This skill is **read-only**. NEVER use Write. NEVER use Edit. `allowed-tools` deliberately omits both.
+- MUST read both spec docs in Stage 2 before any scoring. Do NOT proceed to Stage 6 until both are read (or multilingual marked N/A per fallback rule).
+- Every FAIL/WARN MUST cite a line number from the evaluated file.
+- NEVER fabricate findings. If a check cannot be verified, mark it N/A with a one-line reason.
+- Bash usage MUST be limited to file resolution (`test -f`, `ls`) — NEVER run mutating commands.
 
 ## Worked example
 
@@ -157,8 +187,9 @@ User runs `/skill-evaluate skill-create` from this repo.
 
 ## Final checks before responding
 
-1. `extend-claude-with-skills.md` was read before any scoring (Stage 2 ran before Stage 6).
+1. BOTH `extend-claude-with-skills.md` AND `multilingual-skill-rules.md` were read before any scoring (Stage 2 ran before Stage 6). If multilingual was unreachable, the language-strategy block is marked N/A with a fallback note.
 2. The target SKILL.md was located and read (Stage 3 → Stage 4) before any check ran.
 3. Every FAIL/WARN cites a line number from the evaluated file.
-4. The summary line counts FAIL/WARN/PASS/N/A correctly.
-5. No file was written or edited at any point.
+4. Language-strategy checks (16-22) ran and produced one row each in the report.
+5. The summary line counts FAIL/WARN/PASS/N/A correctly.
+6. No file was written or edited at any point.

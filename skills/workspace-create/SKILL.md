@@ -1,6 +1,6 @@
 ---
 name: workspace-create
-description: "Scaffolds a workspace directory (.workspace/, .claude/, .vscode/) under ./<name>/ with a populated CLAUDE.md. Asks the user a single batched chat question to gather goal, repos, and stack — no per-question round-trips. Manual invocation only via /workspace-create [name]."
+description: "Use when the user wants to scaffold a workspace directory (.workspace/, .claude/, .vscode/) under ./[name]/ with a populated CLAUDE.md, or asks to 'criar workspace', 'novo workspace', 'montar workspace', 'inicializar workspace'. Asks the user a single batched chat question to gather goal, repos, and stack — no per-question round-trips. Manual invocation only via /workspace-create [workspace-name]."
 argument-hint: [workspace-name]
 allowed-tools: [Read, Write, Bash]
 disable-model-invocation: true
@@ -30,7 +30,7 @@ else
 fi
 ```
 
-If `INVALID`: output `The name \`<name>\` is not valid. Workspace names must match \`^[a-z][a-z0-9-]*$\` with no path separators.` and re-ask. Do not proceed until validation passes.
+If `INVALID`: output `The name \`<name>\` is not valid. Workspace names must match \`^[a-z][a-z0-9-]*$\` with no path separators.` and re-ask. Do NOT proceed to Stage 2 until validation returns `VALID`.
 
 Confirm the resolved name with one chat line — no AskUserQuestion:
 
@@ -93,7 +93,7 @@ Then ask in chat:
 
 > Shall I create all these files? Reply 'yes' to proceed or describe changes.
 
-Wait for the reply. If the user describes changes, incorporate them and re-show the preview. Do not proceed until the user replies 'yes' or equivalent.
+Wait for the reply. If the user describes changes, incorporate them and re-show the preview. Do NOT proceed to Stage 4 until the user replies 'yes' or equivalent.
 
 ## Stage 4 — Check for existing workspace
 
@@ -171,7 +171,7 @@ If ≥ 195, trim `{{REPO_MAP}}` rows first (summarize multiple purposes on one r
 
 Write the populated content to `$WORKSPACE_ROOT/CLAUDE.md`.
 
-**Zero tolerance for unreplaced markers:** before writing, scan for any remaining `{{` patterns. If any are found, replace with the appropriate fallback. Never write `{{MARKER}}` to the final CLAUDE.md.
+**Zero tolerance for unreplaced markers:** before writing, scan for any remaining `{{` patterns. If any are found, replace with the appropriate fallback. NEVER write `{{MARKER}}` to the final CLAUDE.md. Do NOT proceed to Stage 8 until the marker scan returns zero matches.
 
 ## Stage 8 — Write `.claude/settings.local.json`
 
@@ -229,6 +229,16 @@ User runs `/workspace-create my-apis`.
   - `wc -l` → 58 lines (< 195). Write.
 - **Stage 8:** Write `my-apis/.claude/settings.local.json`.
 - **Stage 9:** "Workspace `my-apis` created at `./my-apis/`. CLAUDE.md populated. Open it to review."
+
+## Critical Rules
+
+- Workspace name MUST match `^[a-z][a-z0-9-]*$` with no `/`, `..`, or `\`. NEVER bypass validation.
+- All paths MUST resolve via `$WORKSPACE_ROOT="$(pwd)/<validated-name>"` — absolute, CWD-relative. NEVER use `$USERPROFILE` (this is a project workspace, not a global skill). NEVER use `~`.
+- `mkdir -p` MUST run before any Write call. Write tool does NOT create parent directories.
+- Stage 3 preview confirmation MUST be received before any mkdir or Write. Do NOT proceed without explicit user 'yes'.
+- The unreplaced-marker scan in Stage 7 MUST return zero matches before CLAUDE.md is written. NEVER write `{{MARKER}}` to disk.
+- CLAUDE.md MUST be < 195 lines. NEVER write a longer file — trim repo rows and conventions first.
+- Stage 8 writes ONLY to `$WORKSPACE_ROOT/.claude/settings.local.json` — NEVER touches `$USERPROFILE/.claude/` or any other global path.
 
 ## Pre-mkdir checks (before Stage 5)
 
